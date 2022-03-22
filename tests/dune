@@ -1,2 +1,3 @@
 (test
- (name Comma))
+ (name scanner_tests)
+ (libraries src ounit2))
