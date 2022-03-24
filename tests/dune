@@ -1,0 +1,3 @@
+(test
+ (name scanner_tests)
+ (libraries src ounit2))
