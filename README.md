@@ -26,7 +26,7 @@ dune exec <file path/name.exe>
 For example if you type:
 ```console
 dune build bin/main.exe
-dune exec bin/main
+dune exec bin/main.exe
 ```
 
 "Hello World!" will print to the terminal
