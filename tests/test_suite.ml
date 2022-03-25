@@ -21,13 +21,13 @@ let run_fail_test name input expected_failure =
 let parse_tests = "Test suite for parser" >::: [
                   run_pass_test "int dclr" "int a;" "int a;\n";
                   run_pass_test "int decl w/ assign" "int a = 7;" "int a = 7;\n";
-                  run_pass_test "int decl w/ assign var" "int a = 1; int b = a;" "int a = 1; int b = a;\n";
+                  run_pass_test "int decl w/ assign var" "int a = 1; int b = a;" "int a = 1;\nint b = a;\n";
                   run_fail_test "int decl w/ assign illegal" "int a = &" Stdlib.Parsing.Parse_error;
                   run_fail_test "int decl w/ illegal var name" "int 4;" Stdlib.Parsing.Parse_error;
                   run_fail_test "int decl w/ illegal var name" "int double;" Stdlib.Parsing.Parse_error;
                   run_pass_test "bool dclr" "bool a;" "bool a;\n";
                   run_pass_test "bool decl w/ assign" "bool a = true;" "bool a = true;\n";
-                  run_pass_test "bool decl w/ assign var" "bool a = true; bool b = true;" "bool a = true; bool b = true;\n";
+                  run_pass_test "bool decl w/ assign var" "bool a = true; bool b = true;" "bool a = true;\nbool b = true;\n";
                   run_fail_test "bool decl w/ assign illegal" "bool a = )" Stdlib.Parsing.Parse_error;
                   run_fail_test "bool decl w/ illegal var name" "bool double;" Stdlib.Parsing.Parse_error;
                   ]
