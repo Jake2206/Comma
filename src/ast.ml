@@ -56,7 +56,5 @@ let string_of_typ = function
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 
 let string_of_program fdecl =
-  "\n\nParsed program: \n\n" ^
   String.concat "" (List.map string_of_vdecl fdecl.locals) ^
-  String.concat "" (List.map string_of_stmt fdecl.body) ^
-  "\n"
+  String.concat "" (List.map string_of_stmt fdecl.body) 

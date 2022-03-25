@@ -1,3 +1,3 @@
 (test
- (name scanner_tests)
+ (name test_suite)
  (libraries src ounit2))
