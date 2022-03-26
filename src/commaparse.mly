@@ -4,7 +4,7 @@
 open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE PLUS MINUS ASSIGN
+%token SEMI LPAREN RPAREN LBRACE RBRACE PLUS MINUS ASSIGN LBRACK RBRACK
 %token EQ NEQ LT AND OR
 %token IF ELSE EIF
 %token WHILE FOR IN
@@ -13,7 +13,9 @@ open Ast
 %token DOUBLE INT BOOL CHAR LIST ARRAY MATRIX NUL
 %token COMMA LAMBDA
 %token <float> FLIT
-%token <int> LITERAL
+%token <int> INTLIT
+%token <bool> BLIT
+%token <char> CHLIT
 %token <bool> BLIT
 %token <string> ID
 %token EOF
@@ -21,6 +23,7 @@ open Ast
 %start program_rule
 %type <Ast.program> program_rule
 
+%left SEMI
 %right ASSIGN
 %left OR
 %left AND
@@ -38,12 +41,16 @@ vdecl_list_rule:
   | vdecl_rule vdecl_list_rule  { $1 :: $2 }
 
 vdecl_rule:
-  typ_rule ID SEMI { ($1, $2) }
-
+  | typ_rule ID ASSIGN expr_rule SEMI { ($1, $2, $4) }
+  | typ_rule LBRACK RBRACK ID ASSIGN expr_rule SEMI { ($1, $4, $6) }
 
 typ_rule:
-  INT       { Int  }
-  | BOOL    { Bool }
+  INT       { Int    }
+  | BOOL    { Bool   }
+  | DOUBLE  { Double }
+  | CHAR    { Char   } 
+  | LIST    { List   }
+
 
 stmt_list_rule:
     /* nothing */               { []     }
@@ -55,10 +62,21 @@ stmt_rule:
   | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
   | WHILE LPAREN expr_rule RPAREN stmt_rule               { While ($3,$5)   }
 
+list_decl_rule:
+  /*nothing*/ { [] }
+  | list_elems_rule  { $1 }
+
+list_elems_rule:
+    expr_rule                         { [$1]   }
+  | expr_rule COMMA list_elems_rule   { $1::$3 }
+
 expr_rule:
   | BLIT                          { BoolLit $1            }
-  | LITERAL                       { Literal $1            }
+  | INTLIT                        { IntLit  $1            }
+  | FLIT                          { DoubLit $1            }
+  | CHLIT                         { CharLit $1            }
   | ID                            { Id $1                 }
+  | LBRACK list_decl_rule RBRACK  { ListLit $2           } 
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
   | expr_rule EQ expr_rule        { Binop ($1, Equal, $3) }
