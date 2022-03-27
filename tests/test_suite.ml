@@ -6,7 +6,7 @@ open OUnit2
 let one_test current_test =
   let lexbuf = Lexing.from_string current_test in
   let program = Commaparse.program_rule Scanner.tokenize lexbuf in
-  (*print_endline (Ast.string_of_program program)*)
+  print_endline (Ast.string_of_program program);
   Ast.string_of_program program
 
 let get_str s =
@@ -27,12 +27,9 @@ let parse_tests = "Test suite for parser" >::: [
                   run_pass_test "bool dclr w/ assign" "bool a = true;" "bool a = true;\n"; 
                   run_fail_test "bool decl w/ assign illegal" "bool a = )" Stdlib.Parsing.Parse_error;
                   run_fail_test "bool decl w/ illegal var name" "bool double;" Stdlib.Parsing.Parse_error;
-                  
-				  run_pass_test "if expr w/ empty stmt" "if (true) { }" "if (true)\n{\n}\nelse\n{\n}\n";
-				  run_fail_test "if expr w/ empty stmt" "if (true;) { }" Stdlib.Parsing.Parse_error;
-				  run_pass_test "if expr w/ eif" "if (true) { } eif (false) {}" "if (true)\n{\n}\nelse\nif (false)\n{\n}\nelse\n{\n}\n";
-				  
-=======
+                  run_pass_test "if expr w/ empty stmt" "if (true) { }" "if (true)\n{\n}\nelse\n{\n}\n";
+                  run_fail_test "if expr w/ empty stmt" "if (true;) { }" Stdlib.Parsing.Parse_error;
+                  run_pass_test "if expr w/ eif" "if (true) { } eif (false) {}" "if (true)\n{\n}\nelse\nif (false)\n{\n}\nelse\n{\n}\n";
                   run_pass_test "double decl w/ assign" "double b = 3.2;" "double b = 3.2;\n"; 
                   run_fail_test "double decl w/ illegal var name1" "double %;" (Failure("illegal character %"));
                   run_fail_test "double decl w/ illegal var name2" "double int" Stdlib.Parsing.Parse_error;
@@ -44,5 +41,6 @@ let parse_tests = "Test suite for parser" >::: [
                   run_fail_test "list decl w/ illegal assign" "bool[] %;" (Failure("illegal character %"));
                   run_fail_test "list decl w/ illegal var name" "int[] int" Stdlib.Parsing.Parse_error;
                   run_pass_test "if expr w/ empty stmt" "if (true) { }" "if (true)\n{\n}\nelse\n{\n}\n";
-				  run_fail_test "if expr w/ empty stmt" "if (true;) { }" Stdlib.Parsing.Parse_error;
+				          run_fail_test "if expr w/ empty stmt" "if (true;) { }" Stdlib.Parsing.Parse_error;
+]
 let _ = run_test_tt_main parse_tests
