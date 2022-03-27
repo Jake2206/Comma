@@ -1,6 +1,6 @@
 type bop = Add | Sub | Equal | Neq | Less | Great | LessEqual | GreatEqual | And | Or 
 
-type typ = Int | Bool
+type typ = Int | Bool | Double
 
 type expr =
   | Literal of int
@@ -56,6 +56,7 @@ let rec string_of_stmt = function
 let string_of_typ = function
     Int -> "int"
   | Bool -> "bool"
+  | Double -> "double"
 
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 

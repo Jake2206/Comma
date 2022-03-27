@@ -46,8 +46,9 @@ vdecl_rule:
 
 
 typ_rule:
-  INT       { Int  }
-  | BOOL    { Bool }
+  INT       { Int    }
+  | BOOL    { Bool   }
+  | FLIT    { Double }
 
 stmt_list_rule:
     /* nothing */               { []     }
@@ -64,13 +65,13 @@ expr_rule:
   | BLIT                          { BoolLit $1            }
   | LITERAL                       { Literal $1            }
   | ID                            { Id $1                 }
-  | FLIT						  { FloatLit $1 		  }
+  | FLIT						              { FloatLit $1 		      }
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
   | expr_rule EQ expr_rule        { Binop ($1, Equal, $3) }
   | expr_rule NEQ expr_rule       { Binop ($1, Neq, $3)   }
   | expr_rule LT expr_rule        { Binop ($1, Less, $3)  }
-  | expr_rule GT expr_rule       { Binop ($1, Great, $3) }
+  | expr_rule GT expr_rule        { Binop ($1, Great, $3) }
   | expr_rule LTE expr_rule 	  { Binop ($1, LessEqual, $3)  }
   | expr_rule GTE expr_rule 	  { Binop ($1, GreatEqual, $3) }
   | expr_rule AND expr_rule       { Binop ($1, And, $3)   }
