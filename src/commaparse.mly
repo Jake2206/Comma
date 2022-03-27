@@ -59,7 +59,8 @@ stmt_rule:
   | LBRACE stmt_list_rule RBRACE                          { Block $2        }
   | IF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }
   | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) } 
-  | WHILE LPAREN expr_rule RPAREN stmt_rule				  { While ($3, $5)  }
+  | WHILE LPAREN expr_rule RPAREN stmt_rule				        { While ($3, $5)  }
+  | FOR LPAREN expr_rule COMMA expr_rule COMMA expr_rule RPAREN stmt_rule { For ($3, $5, $7, $9) }
 
 expr_rule:
   | BLIT                          { BoolLit $1            }
