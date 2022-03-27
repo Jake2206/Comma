@@ -21,6 +21,9 @@ rule tokenize = parse
 | "=="     { EQ }
 | "!="     { NEQ }
 | '<'      { LT }
+| "<="     { LTE }
+| '>'	   { GT } 
+| ">="	   { GTE }
 | "&&"     { AND }
 | "||"     { OR }
 | "if"     { IF }

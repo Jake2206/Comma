@@ -30,7 +30,10 @@ let parse_tests = "Test suite for parser" >::: [
                   run_pass_test "bool decl w/ assign var" "bool a = true; bool b = true;" "bool a = true;\nbool b = true;\n";
                   run_fail_test "bool decl w/ assign illegal" "bool a = )" Stdlib.Parsing.Parse_error;
                   run_fail_test "bool decl w/ illegal var name" "bool double;" Stdlib.Parsing.Parse_error;
-                  ]
+                  
+				  run_pass_test "if expr w/ empty stmt" "if (true) { }" "if (true)\n{\n}\nelse\n{\n}\n";
+				  run_fail_test "if expr w/ empty stmt" "if (true;) { }" Stdlib.Parsing.Parse_error;
+				  ]
 (*
                   run_pass_test "double decl" "double b;" "double b\n"; 
                   run_pass_test "double decl w/ assign" "double b = 3.1;" "double b = 3.1;\n";

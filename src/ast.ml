@@ -1,4 +1,4 @@
-type bop = Add | Sub | Equal | Neq | Less | And | Or
+type bop = Add | Sub | Equal | Neq | Less | Great | LessEqual | GreatEqual | And | Or 
 
 type typ = Int | Bool
 
@@ -29,6 +29,9 @@ let string_of_op = function
   | Equal -> "=="
   | Neq -> "!="
   | Less -> "<"
+  | Great -> ">"
+  | LessEqual -> "<="
+  | GreatEqual -> ">="
   | And -> "&&"
   | Or -> "||"
 
