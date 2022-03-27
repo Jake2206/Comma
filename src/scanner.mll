@@ -5,6 +5,8 @@
 
 let digit = ['0'-'9']
 let letter = ['a'-'z' 'A'-'Z']
+let char = ''' ( letter | digit ) '''
+let escape = '\\' [''' '"']
 
 rule tokenize = parse
   [' ' '\t' '\r' '\n'] { tokenize lexbuf } (* Whitespace *)
@@ -13,6 +15,8 @@ rule tokenize = parse
 | ')'      { RPAREN }
 | '{'      { LBRACE }
 | '}'      { RBRACE }
+| '['      { LBRACK }
+| ']'      { RBRACK }
 | ';'      { SEMI }
 | ','      { COMMA }
 | '@'      { LAMBDA }
@@ -47,9 +51,10 @@ rule tokenize = parse
 | "in"     { IN   }
 | "row"    { ROW  } 
 | "col"    { COL  }
-| digit+ as lem  { LITERAL(int_of_string lem) }
+| digit+ as lem  { INTLIT(int_of_string lem) }
 | digit+ '.' digit+ as lem { FLIT(float_of_string lem) }
 | letter (digit | letter | '_')* as lem { ID(lem) }
+| char as lem { CHLIT(lem.[1]) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
