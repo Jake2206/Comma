@@ -5,7 +5,7 @@ type typ = Int | Bool
 type expr =
   | Literal of int
   | BoolLit of bool
-  | FloatLit of float
+  | Floatlit of float
   | Id of string
   | Binop of expr * bop * expr
   | Assign of string * expr
