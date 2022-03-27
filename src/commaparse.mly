@@ -59,11 +59,9 @@ stmt_rule:
   expr_rule SEMI                                          { Expr $1         }
   | LBRACE stmt_list_rule RBRACE                          { Block $2        }
   | IF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }
-<<<<<<< HEAD
   | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
   | IF LPAREN expr_rule RPAREN stmt_rule eif_rule         { If ($3, $5, $6) }  
   | WHILE LPAREN expr_rule RPAREN stmt_rule				  { While ($3, $5)  }
-=======
   | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) } 
   | WHILE LPAREN expr_rule RPAREN stmt_rule				        { While ($3, $5)  }
   | FOR LPAREN expr_rule COMMA expr_rule COMMA expr_rule RPAREN stmt_rule { For ($3, $5, $7, $9) }
@@ -75,7 +73,6 @@ list_decl_rule:
 list_elems_rule:
     expr_rule                         { [$1]   }
   | expr_rule COMMA list_elems_rule   { $1::$3 }
->>>>>>> 270fd68418b0fa9677007048fc330d204233ed22
 
 eif_rule:
   EIF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF   { If ($3, $5, Block([])) }
