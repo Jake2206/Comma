@@ -2,6 +2,7 @@ open Src
 open OUnit2
 
 
+
 let one_test current_test =
   let lexbuf = Lexing.from_string current_test in
   let program = Commaparse.program_rule Scanner.tokenize lexbuf in
@@ -35,6 +36,8 @@ let parse_tests = "Test suite for parser" >::: [
                   run_pass_test "list decl w/ assign" "int[] b = [3, 4];" "int b = [34];\n";
                   run_pass_test "list decl w/ assign" "int[] b = [3, 't'];" "int b = [3't'];\n";
                   run_fail_test "list decl w/ illegal assign" "bool[] %;" (Failure("illegal character %"));
-                  run_fail_test "list decl w/ illegal var name" "int[] int" Stdlib.Parsing.Parse_error
-                  ]
+                  run_fail_test "list decl w/ illegal var name" "int[] int" Stdlib.Parsing.Parse_error;
+                  run_pass_test "if expr w/ empty stmt" "if (true) { }" "if (true)\n{\n}\nelse\n{\n}\n";
+		  run_fail_test "if expr w/ empty stmt" "if (true;) { }" Stdlib.Parsing.Parse_error;
+				  ]
 let _ = run_test_tt_main parse_tests

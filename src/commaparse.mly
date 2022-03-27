@@ -5,7 +5,7 @@ open Ast
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE PLUS MINUS ASSIGN LBRACK RBRACK
-%token EQ NEQ LT AND OR
+%token EQ NEQ LT GT LTE GTE AND OR 
 %token IF ELSE EIF
 %token WHILE FOR IN
 %token FUNC RETURN 
@@ -14,7 +14,6 @@ open Ast
 %token COMMA LAMBDA
 %token <float> FLIT
 %token <int> INTLIT
-%token <bool> BLIT
 %token <char> CHLIT
 %token <bool> BLIT
 %token <string> ID
@@ -23,6 +22,9 @@ open Ast
 %start program_rule
 %type <Ast.program> program_rule
 
+%nonassoc NOELSEEIF
+%nonassoc ELSE
+%nonassoc EIF
 %left SEMI
 %right ASSIGN
 %left OR
@@ -51,7 +53,6 @@ typ_rule:
   | CHAR    { Char   } 
   | LIST    { List   }
 
-
 stmt_list_rule:
     /* nothing */               { []     }
     | stmt_rule stmt_list_rule  { $1::$2 }
@@ -59,8 +60,9 @@ stmt_list_rule:
 stmt_rule:
   expr_rule SEMI                                          { Expr $1         }
   | LBRACE stmt_list_rule RBRACE                          { Block $2        }
-  | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
-  | WHILE LPAREN expr_rule RPAREN stmt_rule               { While ($3,$5)   }
+  | IF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }
+  | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) } 
+  | WHILE LPAREN expr_rule RPAREN stmt_rule				  { While ($3, $5)  }
 
 list_decl_rule:
   /*nothing*/ { [] }
@@ -76,12 +78,15 @@ expr_rule:
   | FLIT                          { DoubLit $1            }
   | CHLIT                         { CharLit $1            }
   | ID                            { Id $1                 }
-  | LBRACK list_decl_rule RBRACK  { ListLit $2           } 
+  | LBRACK list_decl_rule RBRACK  { ListLit $2            } 
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
   | expr_rule EQ expr_rule        { Binop ($1, Equal, $3) }
   | expr_rule NEQ expr_rule       { Binop ($1, Neq, $3)   }
   | expr_rule LT expr_rule        { Binop ($1, Less, $3)  }
+  | expr_rule GT expr_rule        { Binop ($1, Great, $3) }
+  | expr_rule LTE expr_rule 	  { Binop ($1, LessEqual, $3)  }
+  | expr_rule GTE expr_rule 	  { Binop ($1, GreatEqual, $3) }
   | expr_rule AND expr_rule       { Binop ($1, And, $3)   }
   | expr_rule OR expr_rule        { Binop ($1, Or, $3)    }
   | ID ASSIGN expr_rule           { Assign ($1, $3)       }
