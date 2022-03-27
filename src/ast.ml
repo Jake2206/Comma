@@ -5,7 +5,7 @@ type typ = Int | Bool | Double
 type expr =
   | Literal of int
   | BoolLit of bool
-  | Floatlit of float
+  | FloatLit of float
   | Id of string
   | Binop of expr * bop * expr
   | Assign of string * expr
@@ -40,6 +40,7 @@ let rec string_of_expr = function
     Literal(l) -> string_of_int l
   | BoolLit(true) -> "true"
   | BoolLit(false) -> "false"
+  | FloatLit(f) -> string_of_float f
   | Id(s) -> s
   | Binop(e1, o, e2) ->
     string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
