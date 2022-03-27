@@ -34,6 +34,8 @@ let parse_tests = "Test suite for parser" >::: [
                   
 				  run_pass_test "if expr w/ empty stmt" "if (true) { }" "if (true)\n{\n}\nelse\n{\n}\n";
 				  run_fail_test "if expr w/ empty stmt" "if (true;) { }" Stdlib.Parsing.Parse_error;
+				  run_pass_test "if expr w/ eif" "if (true) { } eif (false) {}" "if (true)\n{\n}\nelse\nif (false)\n{\n}\nelse\n{\n}\n";
+				  
 				  ]
 (*
                   run_pass_test "double decl" "double b;" "double b\n"; 

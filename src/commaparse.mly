@@ -26,10 +26,8 @@ open Ast
 %nonassoc ELSE
 %nonassoc EIF
 %right ASSIGN
-%left OR
-%left AND
-%left EQ NEQ
-%left LT
+%left OR AND
+%left EQ NEQ LT GT LTE GTE 
 %left PLUS MINUS
 
 %%
@@ -58,14 +56,21 @@ stmt_rule:
   expr_rule SEMI                                          { Expr $1         }
   | LBRACE stmt_list_rule RBRACE                          { Block $2        }
   | IF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }
-  | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) } 
+  | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
+  | IF LPAREN expr_rule RPAREN stmt_rule eif_rule         { If ($3, $5, $6) }  
   | WHILE LPAREN expr_rule RPAREN stmt_rule				  { While ($3, $5)  }
+
+eif_rule:
+  EIF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF   { If ($3, $5, Block([])) }
+  |EIF LPAREN expr_rule RPAREN stmt_rule eif_rule		  { If ($3, $5, $6) }
+  |EIF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
+
 
 expr_rule:
   | BLIT                          { BoolLit $1            }
   | LITERAL                       { Literal $1            }
   | ID                            { Id $1                 }
-  | FLIT						              { FloatLit $1 		      }
+  | FLIT						  { FloatLit $1 		  }
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
   | expr_rule EQ expr_rule        { Binop ($1, Equal, $3) }
