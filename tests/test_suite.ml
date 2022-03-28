@@ -6,7 +6,7 @@ open OUnit2
 let one_test current_test =
   let lexbuf = Lexing.from_string current_test in
   let program = Commaparse.program_rule Scanner.tokenize lexbuf in
-  print_endline (Ast.string_of_program program);
+  (*print_endline (Ast.string_of_program program);*)
   Ast.string_of_program program
 
 let get_str s =

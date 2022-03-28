@@ -24,8 +24,8 @@ open Helpers
 %type <Ast.program> program_rule
 
 %nonassoc NOELSEEIF
-%nonassoc ELSE
 %nonassoc EIF
+%nonassoc ELSE
 %left SEMI
 %right ASSIGN
 %left OR AND
