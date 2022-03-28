@@ -108,8 +108,8 @@ list_elems_rule:
   | expr_rule COMMA list_elems_rule   { $1::$3 }
 
 eif_rule:
-    EIF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF   { If ($3, $5, Block([])) }
-  | EIF LPAREN expr_rule RPAREN stmt_rule eif_rule		  { If ($3, $5, $6) }
+    EIF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }
+  | EIF LPAREN expr_rule RPAREN stmt_rule eif_rule         { If ($3, $5, $6) }
   | EIF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
 
 
@@ -119,7 +119,7 @@ expr_rule:
   | FLIT                          { DoubLit $1            }
   | CHLIT                         { CharLit $1            }
   | ID                            { Id $1                 }
-  | NUL							              { NulLit 				  }
+  | NUL		                  { NulLit 		  }
   | LBRACK list_decl_rule RBRACK  { ListLit $2            } 
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }

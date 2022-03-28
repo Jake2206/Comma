@@ -1,10 +1,10 @@
-
+(*
 open Ast
 open Sast
 
 module StringMap = Map.Make(String)
 
-type func_symbol = func_decl StringMap.t
+(*type func_symbol = func_decl StringMap.t*)
 
 let check (globals, functions) = 
 	let check_binds (kind  : string) (binds : bind list) =
@@ -137,3 +137,4 @@ let check (globals, functions) =
 	}
 	
 in (globals, List.map check_function functions)
+*)
