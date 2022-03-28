@@ -2,9 +2,9 @@ open Ast
 
 type sexpr = typ * sx
 
-type sx =
+and sx =
   | SIntLit of int
-  | SNul
+  | SNulLit
   | SBoolLit of bool
   | SCharLit of char
   | SDoubLit of float
@@ -21,14 +21,23 @@ type sstmt =
   | SFor of sexpr * sexpr * sexpr * sstmt
   | SReturn of sexpr
 
-type sbind = typ * string * sexpr
-
-type sprogram = {
+type sfunc_def = {
+  srtyp: typ;
+  sfname: string;
+  sformals: bind_no_assign list;
   slocals: bind list;
   sbody: sstmt list;
 }
 
+type program = bind list * func_def list
+(*
+type sprogram = {
+  slocals: bind list;
+  sbody: sstmt list;
+}
+*)
 (* Pretty-printing functions *)
+(*
 let string_of_op = function
     Add -> "+"
   | Sub -> "-"
@@ -48,7 +57,7 @@ let string_of_sarray a =
 
 let rec string_of_sexpr = function
     SIntLit(l) -> string_of_int l
-  | NulLit     -> "nul" 
+  | SNulLit     -> "nul" 
   | SCharLit(c) -> "'" ^ String.make 1 c ^ "'"
   | SDoubLit(d) -> string_of_float d
   | SBoolLit(true) -> "true"
@@ -81,3 +90,4 @@ let string_of_svdecl (t, id, lit) = string_of_typ t ^ " " ^ id ^ " = " ^ string_
 let string_of_sprogram fdecl =
   String.concat "" (List.map string_of_svdecl fdecl.slocals) ^
   String.concat "" (List.map string_of_sstmt fdecl.sbody) 
+  *)

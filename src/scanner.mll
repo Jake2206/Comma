@@ -22,12 +22,14 @@ rule tokenize = parse
 | '@'      { LAMBDA }
 | '+'      { PLUS }
 | '-'      { MINUS }
+| '*'      { MULTIPLY }
+| '/'      { DIVIDE }
 | '='      { ASSIGN }
 | "=="     { EQ }
 | "!="     { NEQ }
 | '<'      { LT }
 | "<="     { LTE }
-| '>'	   { GT } 
+| '>'	     { GT } 
 | ">="	   { GTE }
 | "&&"     { AND }
 | "||"     { OR }

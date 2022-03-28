@@ -2,13 +2,14 @@
 
 %{
 open Ast
+open Helpers
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE PLUS MINUS ASSIGN LBRACK RBRACK
+%token SEMI LPAREN RPAREN LBRACE RBRACE MULTIPLY DIVIDE PLUS MINUS ASSIGN LBRACK RBRACK
 %token EQ NEQ LT GT LTE GTE AND OR 
 %token IF ELSE EIF
 %token WHILE FOR IN
-%token FUNC RETURN 
+%token FUNC RETURN COMMA
 %token ROW COL
 %token DOUBLE INT BOOL CHAR LIST ARRAY MATRIX NUL
 %token COMMA LAMBDA
@@ -23,8 +24,8 @@ open Ast
 %type <Ast.program> program_rule
 
 %nonassoc NOELSEEIF
-%nonassoc ELSE
 %nonassoc EIF
+%nonassoc ELSE
 %left SEMI
 %right ASSIGN
 %left OR AND
@@ -34,15 +35,50 @@ open Ast
 %%
 
 program_rule:
-  vdecl_list_rule stmt_list_rule EOF { {locals=$1; body=$2} }
+  decls EOF { $1}
+
+                         /* first array is for variable declarations, second array is for statements, and third array is for function declarations */
+decls:                   { ([], [], [])                 }
+ | vdecl_rule SEMI decls { (($1 :: get_first_item_in_tuple $3), get_second_item_in_tuple $3, get_third_item_in_tuple $3) }
+ | stmt_rule decls       { (get_first_item_in_tuple $2, ($1 :: get_second_item_in_tuple $2), get_third_item_in_tuple $2) }
+ | fdecl_rule decls      { (get_first_item_in_tuple $2, get_second_item_in_tuple $2, ($1 :: get_third_item_in_tuple $2)) }
+
 
 vdecl_list_rule:
   /*nothing*/                   { []       }
-  | vdecl_rule vdecl_list_rule  { $1 :: $2 }
+  | vdecl_rule SEMI vdecl_list_rule  { $1 :: $3 }
+
 
 vdecl_rule:
-  | typ_rule ID ASSIGN expr_rule SEMI { ($1, $2, $4) }
-  | typ_rule LBRACK RBRACK ID ASSIGN expr_rule SEMI { ($1, $4, $6) }
+  | typ_rule ID ASSIGN expr_rule { ($1, $2, $4) }
+  | typ_rule LBRACK RBRACK ID ASSIGN expr_rule { ($1, $4, $6) }
+
+
+vdecl_rule_no_assign:
+  | typ_rule ID {($1, $2)}
+
+
+/* formals_opt */
+formals_opt:
+  /*nothing*/ { [] }
+  | formals_list { $1 }
+
+formals_list:
+  vdecl_rule_no_assign { [$1] }
+  | vdecl_rule_no_assign COMMA formals_list { $1::$3 }
+
+fdecl_rule:
+  FUNC vdecl_rule_no_assign LPAREN formals_opt RPAREN LBRACE vdecl_list_rule stmt_list_rule RBRACE
+  {
+    {
+      rtyp=fst $2;
+      fname=snd $2;
+      formals=$4;
+      locals=$7;
+      body=$8
+    }
+  }
+
 
 typ_rule:
   INT       { Int    }
@@ -61,6 +97,7 @@ stmt_rule:
   | IF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }
   | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
   | IF LPAREN expr_rule RPAREN stmt_rule eif_rule         { If ($3, $5, $6) }  
+  | RETURN expr_rule SEMI                                 { Return $2       }
   | WHILE LPAREN expr_rule RPAREN stmt_rule				        { While ($3, $5)  }
   | FOR LPAREN expr_rule COMMA expr_rule COMMA expr_rule RPAREN stmt_rule { For ($3, $5, $7, $9) }
 
@@ -73,9 +110,9 @@ list_elems_rule:
   | expr_rule COMMA list_elems_rule   { $1::$3 }
 
 eif_rule:
-  EIF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF   { If ($3, $5, Block([])) }
-  |EIF LPAREN expr_rule RPAREN stmt_rule eif_rule		  { If ($3, $5, $6) }
-  |EIF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
+    EIF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }
+  | EIF LPAREN expr_rule RPAREN stmt_rule eif_rule         { If ($3, $5, $6) }
+  | EIF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
 
 
 expr_rule:
@@ -84,10 +121,12 @@ expr_rule:
   | FLIT                          { DoubLit $1            }
   | CHLIT                         { CharLit $1            }
   | ID                            { Id $1                 }
-  | NUL							              { NulLit 				  }
+  | NUL		                  { NulLit 		  }
   | LBRACK list_decl_rule RBRACK  { ListLit $2            } 
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
+  | expr_rule MULTIPLY expr_rule  { Binop ($1, Multiply, $3)   }
+  | expr_rule DIVIDE expr_rule    { Binop ($1, Divide, $3)   }
   | expr_rule EQ expr_rule        { Binop ($1, Equal, $3) }
   | expr_rule NEQ expr_rule       { Binop ($1, Neq, $3)   }
   | expr_rule LT expr_rule        { Binop ($1, Less, $3)  }
@@ -98,3 +137,13 @@ expr_rule:
   | expr_rule OR expr_rule        { Binop ($1, Or, $3)    }
   | ID ASSIGN expr_rule           { Assign ($1, $3)       }
   | LPAREN expr_rule RPAREN       { $2                    }
+  | ID LPAREN args_opt RPAREN     { Call ($1, $3)         }
+
+args_opt:
+  /*nothing*/ { [] }
+  | args { $1 }
+
+args:
+  expr_rule  { [$1] }
+  | expr_rule COMMA args { $1::$3 }
+
