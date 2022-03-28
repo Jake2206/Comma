@@ -8,7 +8,7 @@ open Ast
 %token EQ NEQ LT GT LTE GTE AND OR 
 %token IF ELSE EIF
 %token WHILE FOR IN
-%token FUNC RETURN 
+%token FUNC RETURN COMMA
 %token ROW COL
 %token DOUBLE INT BOOL CHAR LIST ARRAY MATRIX NUL
 %token COMMA LAMBDA
@@ -34,15 +34,49 @@ open Ast
 %%
 
 program_rule:
-  vdecl_list_rule stmt_list_rule EOF { {locals=$1; body=$2} }
+  decls EOF { $1}
+
+
+decls:                   { ([], [])                 }
+ | vdecl_rule SEMI decls { (($1 :: fst $3), snd $3) }
+ | fdecl_rule decls      { (fst $2, ($1 :: snd $2)) }
+
 
 vdecl_list_rule:
   /*nothing*/                   { []       }
-  | vdecl_rule vdecl_list_rule  { $1 :: $2 }
+  | vdecl_rule SEMI vdecl_list_rule  { $1 :: $3 }
+
 
 vdecl_rule:
-  | typ_rule ID ASSIGN expr_rule SEMI { ($1, $2, $4) }
-  | typ_rule LBRACK RBRACK ID ASSIGN expr_rule SEMI { ($1, $4, $6) }
+  | typ_rule ID ASSIGN expr_rule { ($1, $2, $4) }
+  | typ_rule LBRACK RBRACK ID ASSIGN expr_rule { ($1, $4, $6) }
+
+
+vdecl_rule_no_assign:
+  | typ_rule ID {($1, $2)}
+
+
+/* formals_opt */
+formals_opt:
+  /*nothing*/ { [] }
+  | formals_list { $1 }
+
+formals_list:
+  vdecl_rule_no_assign { [$1] }
+  | vdecl_rule_no_assign COMMA formals_list { $1::$3 }
+
+fdecl_rule:
+  FUNC vdecl_rule_no_assign LPAREN formals_opt RPAREN LBRACE vdecl_list_rule stmt_list_rule RBRACE
+  {
+    {
+      rtyp=fst $2;
+      fname=snd $2;
+      formals=$4;
+      locals=$7;
+      body=$8
+    }
+  }
+
 
 typ_rule:
   INT       { Int    }
@@ -64,6 +98,7 @@ stmt_rule:
   | WHILE LPAREN expr_rule RPAREN stmt_rule				  { While ($3, $5)  }
   | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) } 
   | WHILE LPAREN expr_rule RPAREN stmt_rule				        { While ($3, $5)  }
+  | RETURN expr_rule SEMI                                 { Return $2       }
   /* | FOR LPAREN expr_rule COMMA expr_rule COMMA expr_rule RPAREN stmt_rule { For ($3, $5, $7, $9) } */
 
 list_decl_rule:
@@ -99,3 +134,13 @@ expr_rule:
   | expr_rule OR expr_rule        { Binop ($1, Or, $3)    }
   | ID ASSIGN expr_rule           { Assign ($1, $3)       }
   | LPAREN expr_rule RPAREN       { $2                    }
+  | ID LPAREN args_opt RPAREN     { Call ($1, $3)         }
+
+args_opt:
+  /*nothing*/ { [] }
+  | args { $1 }
+
+args:
+  expr_rule  { [$1] }
+  | expr_rule COMMA args { $1::$3 }
+
