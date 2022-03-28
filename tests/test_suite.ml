@@ -50,13 +50,12 @@ let parse_tests = "Test suite for parser" >::: [
                   run_pass_test "list decl w/ assign" "int[] b = [3, 't'];" "int b = [3't'];\n";
                   run_fail_test "list decl w/ illegal assign" "bool[] %;" (Failure("illegal character %"));
                   run_fail_test "list decl w/ illegal var name" "int[] int" Stdlib.Parsing.Parse_error;
-		  run_pass_test "char list decl" "char[] s = ['t', 'e', 's', 't'];" "char s = [test];\n";
-		  run_fail_test "print test char" "print('t');" "t\n";
-		  run_pass_test "print test int" "print(2);" "2\n";
+		  run_pass_test "char list decl" "char[] s = ['t', 'e', 's', 't'];" "char s = ['t''e''s''t'];\n";
                   run_pass_test "if expr w/ empty stmt" "if (true) { }" "if (true)\n{\n}\nelse\n{\n}\n";
 				  run_fail_test "if expr w/ empty stmt" "if (true;) { }" Stdlib.Parsing.Parse_error;
-                  run_pass_test "hello world" "char[] helloworld = ['h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', '!']; char[] newlist = [print(ele) for ele in helloworld];" "hello world!\n";`
-
+		  (* run_fail_test "print test char" "print('t');" "t\n";
+		  run_pass_test "print test int" "print(2);" "2\n";
+                  run_pass_test "hello world" "char[] helloworld = ['h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', '!']; char[] newlist = [print(ele) for ele in helloworld];" "hello world!\n";*)
                   run_pass_test "func declr" "def int test_f ( int a, int b ) { return a+b; }" "def int test_f(int a, int b)\n{\nreturn a + b;\n}\n";
                   run_fail_test "func declr w/ no types in parameters" "def int test_f ( a, b ) { return a+b; }" Stdlib.Parsing.Parse_error;
                   run_fail_test "func declr w/ no return type" "def test_f ( a, b ) { return a+b; }" Stdlib.Parsing.Parse_error;
@@ -64,5 +63,6 @@ let parse_tests = "Test suite for parser" >::: [
                   run_pass_test "func declr w/ if stmt" "def int test_f ( int a, int b ) { int c = 9; if(a==b){return a;}else{return c;}}" "def int test_f(int a, int b)\n{\nint c = 9;\nif (a == b)\n{\nreturn a;\n}\nelse\n{\nreturn c;\n}\n}\n";
                   run_pass_test "func declr w/ while stmt" "def int test_f ( int a, int b ) { int c = 9; while(a>b){a=a-1;}return a;}" "def int test_f(int a, int b)\n{\nint c = 9;\nwhile (a > b) {\na = a - 1;\n}\nreturn a;\n}\n";
                   run_pass_test "local variable declr and func declr w/ if stmt" "int g = 10; def int test_f ( int a, int b ) { int c = 9; if(a==b){return a;}else{return c;}}" "int g = 10;\ndef int test_f(int a, int b)\n{\nint c = 9;\nif (a == b)\n{\nreturn a;\n}\nelse\n{\nreturn c;\n}\n}\n";
-                  
+
+]                 
 let _ = run_test_tt_main parse_tests
