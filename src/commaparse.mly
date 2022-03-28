@@ -2,6 +2,7 @@
 
 %{
 open Ast
+open Helpers
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE PLUS MINUS ASSIGN LBRACK RBRACK
@@ -36,10 +37,11 @@ open Ast
 program_rule:
   decls EOF { $1}
 
-                         /* first array is for variable declarations and second array is for function declarations */
-decls:                   { ([], [])                 }
- | vdecl_rule SEMI decls { (($1 :: fst $3), snd $3) }
- | fdecl_rule decls      { (fst $2, ($1 :: snd $2)) }
+                         /* first array is for variable declarations, second array is for statements, and third array is for function declarations */
+decls:                   { ([], [], [])                 }
+ | vdecl_rule SEMI decls { (($1 :: get_first_item_in_tuple $3), get_second_item_in_tuple $3, get_third_item_in_tuple $3) }
+ | stmt_rule decls       { (get_first_item_in_tuple $2, ($1 :: get_second_item_in_tuple $2), get_third_item_in_tuple $2) }
+ | fdecl_rule decls      { (get_first_item_in_tuple $2, get_second_item_in_tuple $2, ($1 :: get_third_item_in_tuple $2)) }
 
 
 vdecl_list_rule:
