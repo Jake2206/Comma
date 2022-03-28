@@ -95,9 +95,9 @@ stmt_rule:
   | IF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }
   | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
   | IF LPAREN expr_rule RPAREN stmt_rule eif_rule         { If ($3, $5, $6) }  
-  | WHILE LPAREN expr_rule RPAREN stmt_rule		  { While ($3, $5)  }
   | RETURN expr_rule SEMI                                 { Return $2       }
-  /* | FOR LPAREN expr_rule COMMA expr_rule COMMA expr_rule RPAREN stmt_rule { For ($3, $5, $7, $9) } */
+  | WHILE LPAREN expr_rule RPAREN stmt_rule				        { While ($3, $5)  }
+  | FOR LPAREN expr_rule COMMA expr_rule COMMA expr_rule RPAREN stmt_rule { For ($3, $5, $7, $9) }
 
 list_decl_rule:
   /*nothing*/ { [] }
@@ -119,6 +119,7 @@ expr_rule:
   | FLIT                          { DoubLit $1            }
   | CHLIT                         { CharLit $1            }
   | ID                            { Id $1                 }
+  | NUL							              { NulLit 				  }
   | LBRACK list_decl_rule RBRACK  { ListLit $2            } 
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }

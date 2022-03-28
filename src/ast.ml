@@ -1,8 +1,10 @@
 type bop = Add | Sub | Equal | Neq | Less | Great | LessEqual | GreatEqual | And | Or 
+type uop = Neg | Not
 
-type typ = Int | Bool | Double | Char | List (*| Array | Matrix | Nul*)
+type typ = Int | Bool | Double | Char | List | Nul  (*| Array | Matrix *)
 
 type expr =
+  | NulLit 
   | IntLit of int
   | BoolLit of bool
   | CharLit of char
@@ -19,8 +21,8 @@ type stmt =
   | Expr of expr
   | If of expr * stmt * stmt
   | While of expr * stmt
+  | For of expr * expr * expr * stmt
   | Return of expr
-  (* | For of expr * expr * expr * stmt *)
 
 type bind = typ * string * expr
 type bind_no_assign = typ * string
@@ -57,6 +59,7 @@ let string_of_array a =
 
 let rec string_of_expr = function
     IntLit(l) -> string_of_int l
+  | NulLit     -> "nul" 
   | CharLit(c) -> "'" ^ String.make 1 c ^ "'"
   | DoubLit(d) -> string_of_float d
   | BoolLit(true) -> "true"
@@ -84,6 +87,7 @@ let string_of_typ = function
   | Double -> "double"
   | Char -> "char"
   | List -> "[]"
+  | Nul -> "nul" 
 
 let string_of_vdecl (t, id, lit) = string_of_typ t ^ " " ^ id ^ " = " ^ string_of_expr lit ^ ";\n"
 
