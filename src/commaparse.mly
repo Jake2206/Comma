@@ -86,11 +86,9 @@ expr_rule:
   | FLIT                          { DoubLit $1            }
   | CHLIT                         { CharLit $1            }
   | ID                            { Id $1                 }
-<<<<<<< HEAD
   | FLIT						  { FloatLit $1 		  }
-=======
+  | NUL							  { NulLit 				  }
   | LBRACK list_decl_rule RBRACK  { ListLit $2            } 
->>>>>>> 270fd68418b0fa9677007048fc330d204233ed22
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
   | expr_rule EQ expr_rule        { Binop ($1, Equal, $3) }

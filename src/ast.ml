@@ -1,8 +1,10 @@
 type bop = Add | Sub | Equal | Neq | Less | Great | LessEqual | GreatEqual | And | Or 
+type uop = Neg | Not
 
-type typ = Int | Bool | Double | Char | List (*| Array | Matrix | Nul*)
+type typ = Int | Bool | Double | Char | List | Nul  (*| Array | Matrix *)
 
 type expr =
+  | NulLit 
   | IntLit of int
   | BoolLit of bool
   | CharLit of char
@@ -18,6 +20,7 @@ type stmt =
   | If of expr * stmt * stmt
   | While of expr * stmt
   | For of expr * expr * expr * stmt
+  | Return of expr
 
 type bind = typ * string * expr
 
@@ -46,6 +49,7 @@ let string_of_array a =
 
 let rec string_of_expr = function
     IntLit(l) -> string_of_int l
+  | NulLit     -> "nul" 
   | CharLit(c) -> "'" ^ String.make 1 c ^ "'"
   | DoubLit(d) -> string_of_float d
   | BoolLit(true) -> "true"
@@ -60,6 +64,7 @@ let rec string_of_stmt = function
     Block(stmts) ->
     "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n";
+  | Return(expr) -> "return " ^ string_of_expr e ^ ";\n"
   | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
                       string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
@@ -70,6 +75,7 @@ let string_of_typ = function
   | Double -> "double"
   | Char -> "char"
   | List -> "[]"
+  | Nul -> "nul" 
 
 let string_of_vdecl (t, id, lit) = string_of_typ t ^ " " ^ id ^ " = " ^ string_of_expr lit ^ ";\n"
 
