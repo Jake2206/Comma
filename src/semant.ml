@@ -26,6 +26,16 @@ let check (globals, functions) =
 	
 	(* Check built-in functions *)
 	
+	let built_in_decls =
+		StringMap.add "print" {
+      rtyp = Int;
+      fname = "print";
+      formals = [(Int, "x")];
+      locals = []; body = [] } StringMap.empty
+in
+
+
+
 	(* Add function name to symbol table *)
 	let add_func map fd =
 		let build_in_err = "function " ^ fd.fname ^ " may not be defined"
