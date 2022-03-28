@@ -39,7 +39,9 @@ let parse_tests = "Test suite for parser" >::: [
                   run_pass_test "list decl w/ assign" "int[] b = [3, 4];" "int b = [34];\n";
                   run_pass_test "list decl w/ assign" "int[] b = [3, 't'];" "int b = [3't'];\n";
                   run_fail_test "list decl w/ illegal assign" "bool[] %;" (Failure("illegal character %"));
-                  run_pass_test "func declr" "def int test_f ( int a, int b ) { return a+b; }" "def int test_f(a, b)\n{\nreturn a + b;\n}\n";
+                  run_pass_test "func declr" "def int test_f ( int a, int b ) { return a+b; }" "def int test_f(int a, int b)\n{\nreturn a + b;\n}\n";
+                  run_fail_test "func declr w/ no types in parameters" "def int test_f ( a, b ) { return a+b; }" Stdlib.Parsing.Parse_error;
+                  run_fail_test "func declr w/ no return type" "def test_f ( a, b ) { return a+b; }" Stdlib.Parsing.Parse_error;
                   run_fail_test "list decl w/ illegal var name" "int[] int" Stdlib.Parsing.Parse_error;
 ]
 let _ = run_test_tt_main parse_tests

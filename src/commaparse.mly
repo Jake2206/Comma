@@ -36,7 +36,7 @@ open Ast
 program_rule:
   decls EOF { $1}
 
-
+                         /* first array is for variable declarations and second array is for function declarations */
 decls:                   { ([], [])                 }
  | vdecl_rule SEMI decls { (($1 :: fst $3), snd $3) }
  | fdecl_rule decls      { (fst $2, ($1 :: snd $2)) }
