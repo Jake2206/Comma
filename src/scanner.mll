@@ -22,6 +22,8 @@ rule tokenize = parse
 | '@'      { LAMBDA }
 | '+'      { PLUS }
 | '-'      { MINUS }
+| '*'      { MULTIPLY }
+| '/'      { DIVIDE }
 | '='      { ASSIGN }
 | "=="     { EQ }
 | "!="     { NEQ }

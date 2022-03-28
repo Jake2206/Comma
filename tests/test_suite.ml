@@ -26,6 +26,8 @@ let parse_tests = "Test suite for parser" >::: [
                   run_fail_test "int decl w/ illegal var name2" "int double;" Stdlib.Parsing.Parse_error;
 
                   run_pass_test "stmt outside func" "a = 7;" "a = 7;\n";
+                  run_pass_test "multiply stmt outside func" "2*5;" "2 * 5;\n";
+                  run_pass_test "multiply stmt outside func" "2/5;" "2 / 5;\n";
                   run_pass_test "if stmt" "if(a==2){return 2;}else{return 5;}" "if (a == 2)\n{\nreturn 2;\n}\nelse\n{\nreturn 5;\n}\n";
 
                   run_pass_test "bool dclr w/ assign" "bool a = true;" "bool a = true;\n"; 

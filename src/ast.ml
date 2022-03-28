@@ -1,4 +1,4 @@
-type bop = Add | Sub | Equal | Neq | Less | Great | LessEqual | GreatEqual | And | Or 
+type bop =  Multiply | Divide | Add | Sub | Equal | Neq | Less | Great | LessEqual | GreatEqual | And | Or
 type uop = Neg | Not
 
 type typ = Int | Bool | Double | Char | List | Nul  (*| Array | Matrix *)
@@ -43,6 +43,8 @@ type program = bind list * stmt list * func_def list
 let string_of_op = function
     Add -> "+"
   | Sub -> "-"
+  | Multiply -> "*"
+  | Divide -> "/"
   | Equal -> "=="
   | Neq -> "!="
   | Less -> "<"

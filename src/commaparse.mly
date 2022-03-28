@@ -5,7 +5,7 @@ open Ast
 open Helpers
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE PLUS MINUS ASSIGN LBRACK RBRACK
+%token SEMI LPAREN RPAREN LBRACE RBRACE MULTIPLY DIVIDE PLUS MINUS ASSIGN LBRACK RBRACK
 %token EQ NEQ LT GT LTE GTE AND OR 
 %token IF ELSE EIF
 %token WHILE FOR IN
@@ -125,6 +125,8 @@ expr_rule:
   | LBRACK list_decl_rule RBRACK  { ListLit $2            } 
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
+  | expr_rule MULTIPLY expr_rule  { Binop ($1, Multiply, $3)   }
+  | expr_rule DIVIDE expr_rule    { Binop ($1, Divide, $3)   }
   | expr_rule EQ expr_rule        { Binop ($1, Equal, $3) }
   | expr_rule NEQ expr_rule       { Binop ($1, Neq, $3)   }
   | expr_rule LT expr_rule        { Binop ($1, Less, $3)  }
