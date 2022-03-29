@@ -24,13 +24,14 @@ type stmt =
   | For of expr * expr * expr * stmt
   | Return of expr
 
-type bind = typ * string * expr
-type bind_no_assign = typ * string
+type bind = 
+	AssignBind of typ * string * expr
+	| NoAssignBind of typ * string 
 
 type func_def = {
   rtyp: typ;
   fname: string;
-  formals: bind_no_assign list;
+  formals: bind list;
   locals: bind list;
   body: stmt list;
 }
@@ -94,13 +95,21 @@ let string_of_typ = function
   | Array -> "[]"
   | Nul -> "nul" 
 
-let string_of_vdecl (t, id, lit) = string_of_typ t ^ " " ^ id ^ " = " ^ string_of_expr lit ^ ";\n"
+(* let string_of_vdecl (t, id, lit) = string_of_typ t ^ " " ^ id ^ " = " ^ string_of_expr lit ^ ";\n" *)
+let string_of_vdecl bind = 
+	match bind with 
+	AssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_expr e ^ ";\n"
+	| NoAssignBind(t, i) -> string_of_typ t ^ " " ^ i ^ ";\n"
+	
+let string_of_args bind = 
+	match bind with
+	AssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_expr e
+	| NoAssignBind(t, i) -> string_of_typ t ^ " " ^ i	
 
 
 let string_of_fdecl fdecl =
-  "def " ^ string_of_typ fdecl.rtyp ^ " " ^
-  fdecl.fname ^ "(" ^ String.concat ", " (List.map (fun x -> (string_of_typ (fst x)) ^ " " ^ (snd x))fdecl.formals) ^
-  ")\n{\n" ^
+  "def " ^ string_of_typ fdecl.rtyp ^ " " ^ fdecl.fname ^ "(" ^ String.concat ", " 
+  (List.map (fun x -> string_of_args x) fdecl.formals) ^ ")\n{\n" ^
   String.concat "" (List.map string_of_vdecl fdecl.locals) ^
   String.concat "" (List.map string_of_stmt fdecl.body) ^
   "}\n"
