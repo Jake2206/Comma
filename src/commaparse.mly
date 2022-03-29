@@ -26,11 +26,13 @@ open Helpers
 %nonassoc NOELSEEIF
 %nonassoc EIF
 %nonassoc ELSE
-%left SEMI
 %right ASSIGN
-%left OR AND
-%left EQ NEQ LT GT LTE GTE 
+%left OR 
+%left AND
+%left EQ NEQ 
+%left LT GT LTE GTE 
 %left PLUS MINUS
+%left MULTIPLY DIVIDE
 
 %%
 
@@ -87,6 +89,7 @@ typ_rule:
   | DOUBLE  { Double }
   | CHAR    { Char   } 
   | LIST    { List   }
+  | ARRAY   { Array  }
 
 stmt_list_rule:
     /* nothing */               { []     }
