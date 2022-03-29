@@ -50,12 +50,13 @@ vdecl_list_rule:
 
 
 vdecl_rule:
-  | typ_rule ID ASSIGN expr_rule { ($1, $2, $4) }
-  | typ_rule LBRACK RBRACK ID ASSIGN expr_rule { ($1, $4, $6) }
+  | typ_rule ID ASSIGN expr_rule { AssignBind ($1, $2, $4) }
+  | typ_rule LBRACK RBRACK ID ASSIGN expr_rule { AssignBind ($1, $4, $6) }
 
 
 vdecl_rule_no_assign:
-  | typ_rule ID {($1, $2)}
+  | typ_rule ID {NoAssignBind($1, $2)}
+
 
 
 /* formals_opt */
@@ -68,14 +69,14 @@ formals_list:
   | vdecl_rule_no_assign COMMA formals_list { $1::$3 }
 
 fdecl_rule:
-  FUNC vdecl_rule_no_assign LPAREN formals_opt RPAREN LBRACE vdecl_list_rule stmt_list_rule RBRACE
+  FUNC typ_rule ID LPAREN formals_opt RPAREN LBRACE vdecl_list_rule stmt_list_rule RBRACE
   {
     {
-      rtyp=fst $2;
-      fname=snd $2;
-      formals=$4;
-      locals=$7;
-      body=$8
+      rtyp=$2;
+      fname=$3;
+      formals=$5;
+      locals=$8;
+      body=$9
     }
   }
 

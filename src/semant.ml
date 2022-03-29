@@ -1,30 +1,60 @@
-(*
+(* semantic checking *)
+
 open Ast
 open Sast
-
 module StringMap = Map.Make(String)
-
 (*type func_symbol = func_decl StringMap.t*)
 
 let check (globals, functions) = 
 	let check_binds (kind  : string) (binds : bind list) =
-		(* Check variables bind to a real type (not null)*)
+		(* Check variables bind to a real type (not null)
+			And check that formals do not have expression with declaration*)
 		List.iter (function
-			(Nul, b) -> raise (Failure ("illegal bind: cannot be of type nul"))
+			AssignBind(Nul, _, _)  -> raise (Failure ("illegal bind: cannot be of type nul"))
+			| NoAssignBind(Nul, _) -> raise (Failure ("illegal bind: cannot be of type nul"))
+			| AssignBind(_, _, _) when kind = "formal" -> raise (Failure ("illegal bind: cannot bind expression in function arguments"))
 			| _ -> ()) binds;
 		
 		(* Check no two variables have same name within same scope. *)
+		let compare_binds x y =
+			match (x, y) with
+				(AssignBind(_,n1,_), AssignBind(_,n2,_)) when n1 = n2 -> true
+				| (AssignBind(_,n1,_), NoAssignBind(_,n2)) when n1 = n2 -> true
+			    | (NoAssignBind(_,n1), AssignBind(_,n2,_)) when n1 = n2 -> true
+				| (NoAssignBind(_, n1), NoAssignBind(_, n2)) when n1 = n2 -> true
+				| (_,_) -> false
+		in 
 		let rec dups = function 
 			[] -> ()
-			| ((_, n1) :: (_, n2) :: _) when n1 = n2 -> raise (Failure ("duplicate declaration"))
+			| (x :: y :: _) when (compare_binds x y) -> raise (Failure ("dupliocate declaration"))
 			| _ :: t -> dups t
-		in dups (List.sort (fun (_,a) (_,b) -> compare a b) binds) 
+		in 
+		let sort_bind_list = 
+			List.sort (
+				fun x y -> 
+					match (x, y) with
+						(AssignBind(_,n1,_), AssignBind(_,n2,_))     -> compare n1 n2
+						| (AssignBind(_,n1,_), NoAssignBind(_,n2))   -> compare n1 n2
+						| (NoAssignBind(_,n1), AssignBind(_,n2,_))   -> compare n1 n2
+						| (NoAssignBind(_, n1), NoAssignBind(_, n2)) -> compare n1 n2
+			) binds
+		in dups (sort_bind_list)
 	in 
+	
 	
 	(* Check global variables *)
 	check_binds "globals" globals;
 	
 	(* Check built-in functions *)
+	let built_in_decls =
+      StringMap.add "print" {
+	    rtyp = Nul;
+		fname = "print";
+		formals = [NoAssignBind(Char, "x")];
+		locals = []; body = [] } StringMap.empty
+		(* NEEDS TO BE CHANGED TO ARRAY, CHAR ARRAY, OR LIST *)
+		(* NEED TO ADD REST OF STANDARD LIBRARY *)
+	in
 	
 	(* Add function name to symbol table *)
 	let add_func map fd =
@@ -41,7 +71,6 @@ let check (globals, functions) =
 	(* Collect all function names into one symbol table *)
 	let function_decls = List.fold_left add_func built_in_decls functions
 	in 
-
 	(* Find function in table *)
 	let find_func s =
 		try StringMap.find s function_decls
@@ -59,34 +88,38 @@ let check (globals, functions) =
 	
 	(* Variable table: keep track of type global, formal, local
 		-> formal variables are arguments passed to a function *)
-	let symbols = List.fold_left 
-					(fun m (t, n) -> StringMap.add n t m) StringMap.empty
-											( globals @ func.formals @ func.locals )
+	let symbols =
+				  List.fold_left
+					(fun m x ->
+						match x with
+							AssignBind(t, n, _) -> StringMap.add n t m
+							| NoAssignBind(t, n) -> StringMap.add n t m
+					) StringMap.empty ( globals @ func.formals @ func.locals )
 	in 
 	
 	let type_of_identifier s =
 		try StringMap.find s symbols
 		with Not_found -> raise (Failure ("undeclared symbol: " ^ s))
 	in 						
-
 	let rec expr = function
 		NulLit -> (Nul, SNulLit)
 		| IntLit l -> (Int, SIntLit l)
 		| BoolLit l -> (Bool, SBoolLit l)
 		| CharLit l -> (Char, SCharLit l)
 		| DoubLit l -> (Double, SDoubLit l)
-		| ListLit l -> (List, SListLit l)
-		| Id l      -> (type_of_identifier l, SId s)
-		| Binop(e1, op, e2) as bin -> 
+		(*| ListLit l -> (List, SListLit l) *)
+		| ListLit _ -> (Nul, SNulLit)  (* NEED TO FIX: Need to get type of elements in list? *) 
+		| Id l      -> (type_of_identifier l, SId l)
+		| Binop(e1, op, e2) -> 
 				let (lt, e1derived) = expr e1
 				and (rt, e2derived) = expr e2 in
 				let same = lt = rt in
 				let ty = match op with
-					Add | Sub | Mult | Div when same && lt = Int  -> Int
-					| Add | Sub | Mult | Div when same && lt = Float -> Float
+					Add | Sub | Multiply | Divide when same && lt = Int  -> Int
+					| Add | Sub | Multiply | Divide when same && lt = Double -> Double
 					| Equal | Neq            when same 				-> Bool
 					| Less | Great | LessEqual | GreatEqual 
-											 when same && (lt = Int || lt = Float) -> Bool
+											 when same && (lt = Int || lt = Double) -> Bool
 				    | And | Or when same && lt = Bool 				-> Bool
 					| _ -> raise (Failure ("illegal binary operation"))
 				in (ty, SBinop((lt, e1derived), op, (rt, e2derived)))
@@ -94,19 +127,36 @@ let check (globals, functions) =
 				let lt = type_of_identifier var
 				and (rt, ederived) = expr e in
 				let err = "Illegal assignment: " ^ 
-						string_of_typ lt ^ " = " ^ string_of_type rt ^ " in " ^ 
+						string_of_typ lt ^ " = " ^ string_of_typ rt ^ " in " ^ 
 						string_of_expr ex
 				in (check_assign lt rt err, SAssign(var, (rt, ederived)))
-		(* Need to add a case for function calls *)
+		| Call(fname, args) as call ->
+			let fd = find_func fname in
+			let param_length = List.length fd.formals in
+			if List.length args != param_length then
+			  raise (Failure ("expecting " ^ string_of_int param_length ^
+							  " arguments in " ^ string_of_expr call))
+			else let check_call bind_arg e =
+				   let bind_typ = 
+						match bind_arg with
+							AssignBind(_, _, _) -> raise (Failure ("illegal expression in function args"))
+							| NoAssignBind(t, _) -> t
+				   in 
+				   let (et, e') = expr e in
+				   let err = "illegal argument found " ^ string_of_typ et ^
+							 " expected " ^ string_of_typ bind_typ ^ " in " ^ string_of_expr e
+				   in (check_assign bind_typ et err, e')
+			  in
+			  let args' = List.map2 check_call fd.formals args
+			  in (fd.rtyp, SCall(fname, args'))
 	in
 	
 	(* Check expression returns a boolean *)
-	let chec_bool_expr e = 
+	let check_bool_expr e = 
 		let (typder, exprder) = expr e
 		and err = "Expected Boolean expression"
 		in if typder != Bool then raise (Failure err) else (typder, exprder)
 	in
-
 	(* Check statement *)
 	let rec check_stmt = function
 		Expr e -> SExpr (expr e)
@@ -114,9 +164,10 @@ let check (globals, functions) =
 		| For(e1, e2, e3, st) -> SFor(expr e1, check_bool_expr e2, expr e3, check_stmt st)
 		| While (p, s) -> SWhile(check_bool_expr p, check_stmt s)
 		| Return e -> let (typder, exprder) = expr e in
-			if typder = func.typ then SReturn (typder, exprder)
-			else raise (Failure ("return gives " ^ string_of_typ typder ^ " expected " ^
-								string_of_typ func.typ ^ " in " ^ string_of_expr exprder))
+			if typder = func.rtyp then SReturn (typder, exprder)
+			else raise (Failure ("illegal return: return gives " ^ string_of_typ typder ^ " expected "
+								(*^ string_of_typ func.rtyp ^ " in " ^ string_of_expr exprder*)
+								))
 		| Block sl -> 
 			let rec check_stmt_list = function
 			 [Return _ as s ] -> [check_stmt s]
@@ -127,7 +178,7 @@ let check (globals, functions) =
 			in SBlock(check_stmt_list sl)
 		
 	in {
-		styp 		= func.typ;
+		srtyp 		= func.rtyp;
 		sfname		= func.fname;
 		sformals 	= func.formals;
 		slocals		= func.locals;
@@ -137,4 +188,3 @@ let check (globals, functions) =
 	}
 	
 in (globals, List.map check_function functions)
-*)
