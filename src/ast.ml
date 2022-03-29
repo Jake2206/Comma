@@ -10,7 +10,6 @@ type expr =
   | CharLit of char
   | DoubLit of float
   | ListLit of expr list
-  | ArrayLit of expr list 
   | Id of string
   | Binop of expr * bop * expr
   | Assign of string * expr
@@ -68,7 +67,6 @@ let rec string_of_expr = function
   | BoolLit(true) -> "true"
   | BoolLit(false) -> "false"
   | ListLit(a) -> "[" ^ string_of_array (List.map string_of_expr a) ^ "]"
-  | ArrayLit(a) -> "[" ^ string_of_array (List.map string_of_expr a) ^ "]"
   | Id(s) -> s
   | Binop(e1, o, e2) ->
     string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
