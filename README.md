@@ -1,9 +1,8 @@
 # Comma
 
+We based our project off of NanoC and MicroC. We also borrowed from Edward's projects.
 
-Dune update:
-
---INSTALLATION--
+--DUNE INSTALLATION--
 Install opam: https://opam.ocaml.org/doc/Install.html
 
 Install dune: after opam is installed use the command 

@@ -86,6 +86,7 @@ typ_rule:
   | DOUBLE  { Double }
   | CHAR    { Char   } 
   | LIST    { List   }
+  | ARRAY   { Array  }
 
 stmt_list_rule:
     /* nothing */               { []     }
@@ -123,6 +124,7 @@ expr_rule:
   | ID                            { Id $1                 }
   | NUL		                  { NulLit 		  }
   | LBRACK list_decl_rule RBRACK  { ListLit $2            } 
+  | typ_rule LBRACK list_decl_rule RBRACK { ArrayLit $3   }
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
   | expr_rule MULTIPLY expr_rule  { Binop ($1, Multiply, $3)   }

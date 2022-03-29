@@ -1,7 +1,7 @@
 type bop =  Multiply | Divide | Add | Sub | Equal | Neq | Less | Great | LessEqual | GreatEqual | And | Or
 type uop = Neg | Not
 
-type typ = Int | Bool | Double | Char | List | Nul  (*| Array | Matrix *)
+type typ = Int | Bool | Double | Char | List | Nul | Array (*| Matrix *)
 
 type expr =
   | NulLit 
@@ -10,11 +10,11 @@ type expr =
   | CharLit of char
   | DoubLit of float
   | ListLit of expr list
+  | ArrayLit of expr list 
   | Id of string
   | Binop of expr * bop * expr
   | Assign of string * expr
   | Call of string * expr list
-
 
 type stmt =
   | Block of stmt list
@@ -37,8 +37,6 @@ type func_def = {
 
 type program = bind list * stmt list * func_def list
 
-
-
 (* Pretty-printing functions *)
 let string_of_op = function
     Add -> "+"
@@ -59,6 +57,8 @@ let string_of_array a =
   List.iter (Buffer.add_string buf) a;
   Buffer.contents buf
 
+let sll_to_saa sll = Array.of_list (List.map Array.of_list sll)
+
 let rec string_of_expr = function
     IntLit(l) -> string_of_int l
   | NulLit     -> "nul" 
@@ -67,6 +67,7 @@ let rec string_of_expr = function
   | BoolLit(true) -> "true"
   | BoolLit(false) -> "false"
   | ListLit(a) -> "[" ^ string_of_array (List.map string_of_expr a) ^ "]"
+  | ArrayLit(a) -> "[" ^ string_of_array (List.map string_of_expr a) ^ "]"
   | Id(s) -> s
   | Binop(e1, o, e2) ->
     string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
@@ -90,6 +91,7 @@ let string_of_typ = function
   | Double -> "double"
   | Char -> "char"
   | List -> "[]"
+  | Array -> "[]"
   | Nul -> "nul" 
 
 let string_of_vdecl (t, id, lit) = string_of_typ t ^ " " ^ id ^ " = " ^ string_of_expr lit ^ ";\n"
