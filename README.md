@@ -1,6 +1,12 @@
 # Comma
+Etesam Ansari, ea2905
+Nicholas Cheng , njd2135
+Edward Sturt, ecs2220
+Elysia Witham, ew2632
+Andrey Uspenskiy, avu2106
+Jacob Alexander, jla2206
 
-We based our project off of NanoC and MicroC. We also borrowed from Edward's projects.
+We based our project files off of NanoC and MicroC. We also borrowed from Edward's projects. Refer to the LRM in ```doc/plt_lrm.py``` for more detailed information about the language and its implementation.
 
 --DUNE INSTALLATION--
 Install opam: https://opam.ocaml.org/doc/Install.html
@@ -49,10 +55,8 @@ for example:
 run_pass_test "int dclr" "int a;" "int a;\n"
 ```
 
-4: To run the tests use the command ```dune test``` from anywhere in the directory
+4: To run the tests execute the test suite with ```dune exec ./test_suite.exe``` use the command ```dune test``` from anywhere in the directory
 
 --Other Test Stuff--
 
-1: There are some tests that are commented out until some more functionality has been added (so that there aren't tons of failed tests).
-
-2:This framework is dependent on the pretty-printing functions in the ```src/ast.ml file```. It matches the output of the pretty print functions with the given ```expected_output``` in each test case. As we build more functionality and expand the pretty printing functions, if we use this testing framework, we will need to make sure that the pretty printing output and the expected output match.
+This framework is dependent on the pretty-printing functions in the ```src/ast.ml file``` and the ```src/sast.ml file```. It matches the output of the pretty print functions with the given ```expected_output``` in each test case.

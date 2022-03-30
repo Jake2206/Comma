@@ -1,9 +1,9 @@
 Permissable in language right now that should not be:
 	- Declaring variable with same name as function argument
-	- 
+	- Declare variables of mismatched types outside of functions
 
 Not permissable in language right now that should be:
-	- Declare variables without assignment
+	- Declare variables without assignment (are we sure we want this? It isn't shown in the LRM)
 	- (not sure) Reassignment of already declared variable
 	- Declare variables within a scope (if, for not working) -> parser error
 	- Nul cannot be returned from a function?
