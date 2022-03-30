@@ -1,0 +1,13 @@
+Permissable in language right now that should not be:
+	- Declaring variable with same name as function argument
+	- 
+
+Not permissable in language right now that should be:
+	- Declare variables without assignment
+	- (not sure) Reassignment of already declared variable
+	- Declare variables within a scope (if, for not working) -> parser error
+	- Nul cannot be returned from a function?
+	
+Need to add:
+	- Add standard library functions to semantic checker (semant.ml)
+	

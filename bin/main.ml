@@ -7,7 +7,6 @@ let () = print_int (Helpers.get_third_item_in_tuple (5,6,7) );
 *)
 
 open Src
-open Ast
 
 open Sast
 
