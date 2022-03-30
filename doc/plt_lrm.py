@@ -66,6 +66,11 @@ Arithmetic operators.
 < > == <= >= 
 ```
 Comparison operators.
+The comparison operators compare two values (which must be of the same type),
+of integer, double, or string type, and produce
+the integer 1 if the comparison holds and 0 otherwise. String
+comparison uses standard ASCII lexicographic order.
+
 ```markdown
 = 
 ```
@@ -119,9 +124,16 @@ Reserved symbols.
 ```
 Lambda expressions.
 ```markdown
-/* */
+Valid:
+1. /* */
+2. /* /* /* */ */ */
+Invalid:
+1. /*
+2. */
+3. /* */ */
+4. /* /* */
 ```
-Multiline comment
+Multiline comment. Comments can nest.
 
 \newpage
 
@@ -211,7 +223,15 @@ Arrays are declared similarly to variables except '[]' is added after the type i
   def int f ( a, b ) { return a*b; }
 ```
 Functions are declared with the "def" keyword followed by a type identifier, an id, parameters inside of '()', and an expression that is scoped with '{}'. The type identifier specifies the return type. Note that param_elements can be of separate types, unlike array_elements.
+```markdown
+*function_application*
 
+  | function_id ( param_elements );
+  
+*Function application example*
+  | f( 1 , 7 );
+```
+Function applications are expressions with zero or more parameters, separated with commas. These expressions are evaluated from left to right, corresponding positionally with the parameters bound in the original function declaration. If there is no type mismatch, then the body of the function will execute.
 ### 2.2 Control Flow
 ```markdown
 *expr delimiting with ';'*
@@ -226,19 +246,19 @@ The ';' character delimits expressions.
   | if (a == b) { return 1; } eif (a == c) { return 2; } else { return 3; }
 ```
 The if keyword must be followed by a boolean evaluated expresion inside of '()' and a '{}' enclosed expr. The if keyword can optionally be followed by the else keyword and a '{}' enclosed statement. The if keyword can also optionally be followed by the eif keyword which must be followed by a boolean evaluated expr inside of '()', a '{}' enclosed expr, and an eif OR an else keyword.
-
+The expression within the parentheses of the if is evaluated first, and it must return a boolean. On true, the subsequent statement contained in the curly braces will be executed. Otherwise, the next statement after the curly braces will be executed. 
 ```markdown
 *for loop*
   | for ( int i = 1 , i < 10 , i = i + 1 ) { b = b * 2; }
 ```
 When not used in a matrix loop the for keyword must be followed by '()' containing three expr delimited by ',' which must be followed by a '{}' enclosed expr. The first of the three '()' enclosed expr must evaluate to an int and the second must evaluate to a boolean.
-
+The first expression is evaluated once before starting the loop. On each loop iteration, the second expression, which must return a boolean value, is evaluated first. If it returns false, then the loop ends--otherwise, the third expression is evaluated and then the statement within the curly braces is executed.  
 ```markdown
 *matrix for loop*
   | { x = x*2; } for x in my_matrix
 ```
 The for keyword can be used to directly iterate over a matrix type. To use this feature a user must type a '{}' enclosed expression followed by the for keyword, followed by an id, followed by the in keyword, followed by an id. The second id will only be scoped inside of the expr. If the second id is not a matrix type an error will be thrown.
-
+In this example, every value x in the matrix my_matrix is doubled. 
 ```markdown
 *block*
   | { a = 1; }
@@ -252,7 +272,7 @@ A block is defined by the '{}' characters. Variables declared inside of the bloc
 
   | @type_id ( lvalue ) { expr }
 ```
-Comma will allow lambda expression to be constructed in expressions were typical function declaration would be inconvenient/unnecessary. The beginning of a lambda expression will be designated by the symbol '@' and immediately followed by the type the expression will return and a single variable argument. 
+Comma will allow lambda expression to be constructed in expressions were typical function declaration would be inconvenient/unnecessary. The beginning of a lambda expression will be designated by the symbol '@' and immediately followed by the type the expression will return and a single variable argument. Lambda expressions can access variables in the outer scope
 ```markdown
 *lambda_expr example*
 
@@ -265,9 +285,7 @@ matrix outputMatrix = [
 /* Takes a matrix and adds one to each element */ 
 
 ```
-
-\newpage
-## 3. Standard Library
+## 2.4 Built-ins
 ```markdown
 def nul print ( x : literal )
 ```
@@ -283,6 +301,10 @@ Opens a CSV, reads its contents into a matrix type, and returns the matrix.
 def nul outputCSV ( base_matrix : matrix , filepath : char[] )
 ```
 Opens (or creates if non-existant) a CSV file and exports a matrix's values into a CSV file.
+
+
+\newpage
+## 3. Standard Library
 
 ```markdown
 def matrix scalarMulti ( scalar : double, base_matrix : matrix)
