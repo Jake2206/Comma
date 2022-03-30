@@ -31,30 +31,14 @@ type sfunc_def = {
   sbody: sstmt list;
 }
 
-(*
-type program = bind list * func_def list
-*)
 
 type sprogram = {
   slocals: bind list;
   sbody: sstmt list;
+  sfunctions: sfunc_def list;
 }
 
 (* Pretty-printing functions *)
-
-(*
-let string_of_op = function
-    Add -> "+"
-  | Sub -> "-"
-  | Equal -> "=="
-  | Neq -> "!="
-  | Less -> "<"
-  | Great -> ">"
-  | LessEqual -> "<="
-  | GreatEqual -> ">="
-  | And -> "&&"
-  | Or -> "||"
-*)
 
 let string_of_sarray a =
   let buf = Buffer.create 2000 in
@@ -89,17 +73,17 @@ let rec string_of_sstmt = function
   | SWhile(e, s) -> "while (" ^ string_of_sexpr e ^ ") " ^ string_of_sstmt s
   | SFor (e1, e2, e3, s) -> "for (" ^ string_of_sexpr e1 ^ ", " ^ string_of_sexpr e2 ^ ", " ^ string_of_sexpr e3 ^ string_of_sstmt s
 
-(*
-let string_of_typ = function
-    Int -> "int"
-  | Bool -> "bool"
-  | Double -> "double"
-  | Char -> "char"
-  | List -> "[]"
-  | Nul  -> "nul" 
-*)
-
-let string_of_sprogram fdecl =
+let string_of_sfdecl fdecl =
+  "def " ^ string_of_typ fdecl.srtyp ^ " " ^ fdecl.sfname ^ "(" ^ String.concat ", " 
+  (List.map (fun x -> string_of_args x) fdecl.sformals) ^ ")\n{\n" ^
   String.concat "" (List.map string_of_vdecl fdecl.slocals) ^
-  String.concat "" (List.map string_of_sstmt fdecl.sbody) 
+  String.concat "" (List.map string_of_sstmt fdecl.sbody) ^
+  "}\n"
+
+let string_of_sprogram (binds, stmts, fdecls) =
+  String.concat "" (List.map string_of_vdecl binds) ^ "\n" ^
+  String.concat "" (List.map string_of_sstmt stmts) ^ "\n" ^
+  String.concat "" (List.map string_of_sfdecl fdecls)
+  
+  
 

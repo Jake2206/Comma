@@ -5,7 +5,7 @@ open Sast
 module StringMap = Map.Make(String)
 (*type func_symbol = func_decl StringMap.t*)
 
-let check (globals, functions) = 
+let check (globals, stmts, functions) = 
 	let check_binds (kind  : string) (binds : bind list) =
 		(* Check variables bind to a real type (not null)
 			And check that formals do not have expression with declaration*)
@@ -40,7 +40,6 @@ let check (globals, functions) =
 			) binds
 		in dups (sort_bind_list)
 	in 
-	
 	
 	(* Check global variables *)
 	check_binds "globals" globals;
@@ -176,8 +175,7 @@ let check (globals, functions) =
 			 | s :: ss       -> check_stmt s :: check_stmt_list ss
 			 | [] 			 -> []
 			in SBlock(check_stmt_list sl)
-		
-	in {
+	in  {
 		srtyp 		= func.rtyp;
 		sfname		= func.fname;
 		sformals 	= func.formals;
@@ -185,6 +183,5 @@ let check (globals, functions) =
 		sbody		= match check_stmt (Block func.body) with
 			SBlock(sl) -> sl
 			| _ -> raise (Failure ("internal error: could not convert block"))	
-	}
-	
-in (globals, List.map check_function functions)
+	} 
+in (globals, (List.map check_stmt stmts), (List.map check_function functions))
