@@ -56,13 +56,6 @@ let check (globals, functions) =
 		(* NEED TO ADD REST OF STANDARD LIBRARY *)
 	in
 	
-	let built_in_decls =
-		StringMap.add "print" {
-      rtyp = Int;
-      fname = "print";
-      formals = [(Int, "x")];
-      locals = []; body = [] } StringMap.empty
-in
 
 
 
