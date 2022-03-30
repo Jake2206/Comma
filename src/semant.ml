@@ -56,9 +56,6 @@ let check (globals, functions) =
 		(* NEED TO ADD REST OF STANDARD LIBRARY *)
 	in
 	
-
-
-
 	(* Add function name to symbol table *)
 	let add_func map fd =
 		let build_in_err = "function " ^ fd.fname ^ " may not be defined"
