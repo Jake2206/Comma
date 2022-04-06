@@ -102,8 +102,9 @@ let check (globals, stmts, functions) =
 			| CharLit l -> (Char, SCharLit l)
 			| DoubLit l -> (Double, SDoubLit l)
 			(*| ListLit l -> (List, SListLit l) *)
-			| ListLit _ -> (Nul, SNulLit)  (* NEED TO FIX: Need to get type of elements in list? *) 
-			| Id l      -> (type_of_identifier l, SId l)
+			| ArrayLit _ -> (Nul, SNulLit)  (* NEED TO FIX: Need to get type of elements in list? *) 
+			| MatrixLit _ -> (Nul, SNulLit) (* NEED TO FIX: Need to run array check on each list, need to check dimensions *)
+                        | Id l      -> (type_of_identifier l, SId l)
 			| Binop(e1, op, e2) -> 
 					let (lt, e1derived) = expr e1
 					and (rt, e2derived) = expr e2 in
@@ -199,8 +200,9 @@ let check (globals, stmts, functions) =
 			| CharLit l -> (Char, SCharLit l)
 			| DoubLit l -> (Double, SDoubLit l)
 			(*| ListLit l -> (List, SListLit l) *)
-			| ListLit _ -> (Nul, SNulLit)  (* NEED TO FIX: Need to get type of elements in list? *) 
-			| Id l      -> (type_of_identifier l, SId l)
+			| ArrayLit _ -> (Nul, SNulLit)  (* NEED TO FIX: Need to get type of elements in list? *) 
+		        | MatrixLit _ -> (Nul, SNulLit) (* NEED TO FIX: Need to run array check on each list, need to check dimensions *)	
+                        | Id l      -> (type_of_identifier l, SId l)
 			| Binop(e1, op, e2) -> 
 					let (lt, e1derived) = expr e1
 					and (rt, e2derived) = expr e2 in

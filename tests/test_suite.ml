@@ -2,7 +2,6 @@ open Src
 open OUnit2
 
 
-
 let one_test current_test =
   let lexbuf = Lexing.from_string current_test in
   let program = Commaparse.program_rule Scanner.tokenize lexbuf in
@@ -49,11 +48,16 @@ let parse_tests = "Test suite for parser" >::: [
                   run_fail_test "char decl w/ illegal var name1" "char %;" (Failure("illegal character %"));
                   run_fail_test "char decl w/ illegal var name2" "char int" Stdlib.Parsing.Parse_error;
 
-                  run_pass_test "list decl w/ assign" "int[] b = [3, 4];" "int b = [34];\n\n\n";
-                  run_pass_test "list decl w/ assign" "int[] b = [3, 't'];" "int b = [3't'];\n\n\n";
-                  run_fail_test "list decl w/ illegal assign" "bool[] %;" (Failure("illegal character %"));
-                  run_fail_test "list decl w/ illegal var name" "int[] int" Stdlib.Parsing.Parse_error;
+                  run_pass_test "array decl w/ assign" "int[] b = int [3, 4];" "int b = [34];\n\n\n";
+                  (*run_fail_test "array decl w/ mixed types" "int[] b = int [3, 't'];" "int b = [3't'];\n\n\n";*)
+                  run_fail_test "array decl w/ illegal assign" "bool[] %;" (Failure("illegal character %"));
+                  run_fail_test "array decl w/ illegal var name" "int[] int" Stdlib.Parsing.Parse_error;
                   
+                  run_pass_test "matrix decl w/ assign" "matrix[] b = int [[3, 4],[3, 4]];" "[][] b = [[34][34]];\n\n\n";
+                  run_fail_test "matrix decl w/ missing comma" "matrix[] b = int [[3, 4],[3, 4][1]];" Stdlib.Parsing.Parse_error;
+                  (*run_fail_test "matrix decl w/ incorrect dims" "matrix[] b = int [[3, 4],[3, 4],[1]];" Stdlib.Parsing.Parse_error;*)
+                  (*run_fail_test "matrix decl w/ non-double types" "matrix[] b = int [[3, 't'],[3.5, 1, 'a']];" "[][] b = [[3't'][3.51'a']];\n\n\n"; *)
+
                   run_fail_test "func declr" "def int test_f ( int a ) { return a = 3.0; }" (Failure("Illegal assignment: int = double in a = 3."));
                   run_pass_test "func declr" "def int test_f ( int a, int b ) { return a+b; }" "\n\ndef int test_f(int a, int b)\n{\nreturn (int : (int : a) + (int : b));\n}\n";
                   run_fail_test "func declr w/ no types in parameters" "def int test_f ( a, b ) { return a+b; }" Stdlib.Parsing.Parse_error;

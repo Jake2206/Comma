@@ -9,7 +9,7 @@ and sx =
   | SBoolLit of bool
   | SCharLit of char
   | SDoubLit of float
-  | SListLit of sexpr list
+  | SArrayLit of sexpr list
   | SId of string
   | SBinop of sexpr * bop * sexpr
   | SAssign of string * sexpr
@@ -40,7 +40,7 @@ type sprogram = {
 
 (* Pretty-printing functions *)
 
-let string_of_sarray a =
+let string_of_slist a =
   let buf = Buffer.create 2000 in
   List.iter (Buffer.add_string buf) a;
   Buffer.contents buf
@@ -54,7 +54,7 @@ let rec string_of_sexpr (t, e) =
 	  | SDoubLit(d) -> string_of_float d
 	  | SBoolLit(true) -> "true"
 	  | SBoolLit(false) -> "false"
-	  | SListLit(a) -> "[" ^ string_of_sarray (List.map string_of_sexpr a) ^ "]" 
+	  | SArrayLit(a) -> "[" ^ string_of_slist (List.map string_of_sexpr a) ^ "]" 
 	  | SId(s) -> s
 	  | SBinop(e1, o, e2) ->
 		string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2

@@ -53,12 +53,10 @@ vdecl_list_rule:
 
 vdecl_rule:
   | typ_rule ID ASSIGN expr_rule { AssignBind ($1, $2, $4) }
-  | typ_rule LBRACK RBRACK ID ASSIGN expr_rule { AssignBind ($1, $4, $6) }
-
+  | typ_rule LBRACK RBRACK ID ASSIGN typ_rule expr_rule { AssignBind ($1, $4, $7) }
 
 vdecl_rule_no_assign:
   | typ_rule ID {NoAssignBind($1, $2)}
-
 
 
 /* formals_opt */
@@ -82,14 +80,13 @@ fdecl_rule:
     }
   }
 
-
 typ_rule:
   INT       { Int    }
   | BOOL    { Bool   }
   | DOUBLE  { Double }
   | CHAR    { Char   } 
-  | LIST    { List   }
   | ARRAY   { Array  }
+  | MATRIX  { Matrix }
 
 stmt_list_rule:
     /* nothing */               { []     }
@@ -105,19 +102,26 @@ stmt_rule:
   | WHILE LPAREN expr_rule RPAREN stmt_rule				        { While ($3, $5)  }
   | FOR LPAREN expr_rule COMMA expr_rule COMMA expr_rule RPAREN stmt_rule { For ($3, $5, $7, $9) }
 
-list_decl_rule:
-  /*nothing*/ { [] }
-  | list_elems_rule  { $1 }
-
-list_elems_rule:
-    expr_rule                         { [$1]   }
-  | expr_rule COMMA list_elems_rule   { $1::$3 }
-
 eif_rule:
     EIF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }
   | EIF LPAREN expr_rule RPAREN stmt_rule eif_rule         { If ($3, $5, $6) }
   | EIF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
 
+array_decl_rule:
+  /*nothing*/        { [] }
+  | array_elems_rule { $1 }
+
+array_elems_rule:
+  expr_rule                          { [$1]   }
+  | expr_rule COMMA array_elems_rule   { $1::$3 }
+
+matrix_decl_rule:
+  /*nothing*/        { [] }
+  | matrix_elems_rule { $1 }
+
+matrix_elems_rule:
+  array_elems_rule      { [$1] }
+  | array_elems_rule COMMA matrix_elems_rule { $1::$3 }
 
 expr_rule:
   | BLIT                          { BoolLit $1            }
@@ -126,7 +130,8 @@ expr_rule:
   | CHLIT                         { CharLit $1            }
   | ID                            { Id $1                 }
   | NUL		                  { NulLit 		  }
-  | LBRACK list_decl_rule RBRACK  { ListLit $2            } 
+  | LBRACK array_decl_rule RBRACK { ArrayLit $2           }
+  | LBRACK matrix_decl_rule RBRACK{ MatrixLit $2             }
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
   | expr_rule MULTIPLY expr_rule  { Binop ($1, Multiply, $3)   }
