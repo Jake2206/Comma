@@ -53,8 +53,8 @@ let parse_tests = "Test suite for parser" >::: [
                   run_fail_test "array decl w/ illegal assign" "bool[] %;" (Failure("illegal character %"));
                   run_fail_test "array decl w/ illegal var name" "int[] int" Stdlib.Parsing.Parse_error;
                   
-                  run_pass_test "matrix decl w/ assign" "matrix[] b = int [[3, 4],[3, 4]];" "[][] b = [[34][34]];\n\n\n";
-                  run_fail_test "matrix decl w/ missing comma" "matrix[] b = int [[3, 4],[3, 4][1]];" Stdlib.Parsing.Parse_error;
+                  run_pass_test "matrix decl w/ assign" "matrix b = matrix [[3.1, 4.1],[3.1, 4.1]];" "[][] b = [[3.14.1][3.14.1]];\n\n\n";
+                  run_fail_test "matrix decl w/ missing comma" "matrix b = matrix [[3, 4],[3, 4][1]];" Stdlib.Parsing.Parse_error;
                   (*run_fail_test "matrix decl w/ incorrect dims" "matrix[] b = int [[3, 4],[3, 4],[1]];" Stdlib.Parsing.Parse_error;*)
                   (*run_fail_test "matrix decl w/ non-double types" "matrix[] b = int [[3, 't'],[3.5, 1, 'a']];" "[][] b = [[3't'][3.51'a']];\n\n\n"; *)
 

@@ -43,7 +43,6 @@ rule tokenize = parse
 | "int"    { INT }
 | "bool"   { BOOL }
 | "char"   { CHAR }
-| "list"   { LIST } 
 | "array"  { ARRAY }
 | "matrix" { MATRIX }
 | "true"   { BLIT(true)  }

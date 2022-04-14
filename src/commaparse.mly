@@ -11,7 +11,7 @@ open Helpers
 %token WHILE FOR IN
 %token FUNC RETURN COMMA
 %token ROW COL
-%token DOUBLE INT BOOL CHAR LIST ARRAY MATRIX NUL
+%token DOUBLE INT BOOL CHAR ARRAY MATRIX NUL
 %token COMMA LAMBDA
 %token <float> FLIT
 %token <int> INTLIT
@@ -112,16 +112,8 @@ array_decl_rule:
   | array_elems_rule { $1 }
 
 array_elems_rule:
-  expr_rule                          { [$1]   }
+  expr_rule                            { [$1]   }
   | expr_rule COMMA array_elems_rule   { $1::$3 }
-
-matrix_decl_rule:
-  /*nothing*/        { [] }
-  | matrix_elems_rule { $1 }
-
-matrix_elems_rule:
-  array_elems_rule      { [$1] }
-  | array_elems_rule COMMA matrix_elems_rule { $1::$3 }
 
 expr_rule:
   | BLIT                          { BoolLit $1            }
@@ -129,9 +121,9 @@ expr_rule:
   | FLIT                          { DoubLit $1            }
   | CHLIT                         { CharLit $1            }
   | ID                            { Id $1                 }
-  | NUL		                  { NulLit 		  }
+  | NUL		                        { NulLit 		            }
   | LBRACK array_decl_rule RBRACK { ArrayLit $2           }
-  | LBRACK matrix_decl_rule RBRACK{ MatrixLit $2             }
+  | MATRIX LBRACK array_decl_rule RBRACK { MatrixLit $3         }
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
   | expr_rule MULTIPLY expr_rule  { Binop ($1, Multiply, $3)   }
@@ -140,8 +132,8 @@ expr_rule:
   | expr_rule NEQ expr_rule       { Binop ($1, Neq, $3)   }
   | expr_rule LT expr_rule        { Binop ($1, Less, $3)  }
   | expr_rule GT expr_rule        { Binop ($1, Great, $3) }
-  | expr_rule LTE expr_rule 	  { Binop ($1, LessEqual, $3)  }
-  | expr_rule GTE expr_rule 	  { Binop ($1, GreatEqual, $3) }
+  | expr_rule LTE expr_rule 	    { Binop ($1, LessEqual, $3)  }
+  | expr_rule GTE expr_rule 	    { Binop ($1, GreatEqual, $3) }
   | expr_rule AND expr_rule       { Binop ($1, And, $3)   }
   | expr_rule OR expr_rule        { Binop ($1, Or, $3)    }
   | ID ASSIGN expr_rule           { Assign ($1, $3)       }
