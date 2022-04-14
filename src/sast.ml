@@ -34,7 +34,6 @@ type sfunc_def = {
 
 type sprogram = {
   slocals: bind list;
-  sbody: sstmt list;
   sfunctions: sfunc_def list;
 }
 
@@ -80,9 +79,8 @@ let string_of_sfdecl fdecl =
   String.concat "" (List.map string_of_sstmt fdecl.sbody) ^
   "}\n"
 
-let string_of_sprogram (binds, stmts, fdecls) =
+let string_of_sprogram (binds, fdecls) =
   String.concat "" (List.map string_of_vdecl binds) ^ "\n" ^
-  String.concat "" (List.map string_of_sstmt stmts) ^ "\n" ^
   String.concat "" (List.map string_of_sfdecl fdecls)
   
   

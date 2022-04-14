@@ -35,7 +35,7 @@ type func_def = {
   body: stmt list;
 }
 
-type program = bind list * stmt list * func_def list
+type program = bind list * func_def list
 
 (* Pretty-printing functions *)
 let string_of_op = function
