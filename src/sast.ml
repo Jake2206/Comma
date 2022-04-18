@@ -14,7 +14,8 @@ and sx =
   | SId of string
   | SBinop of sexpr * bop * sexpr
   | SAssign of string * sexpr
-  | SCall of string * sexpr list 
+  | SCall of string * sexpr list
+  | SLambda of string * sexpr
 
 type sstmt =
   | SBlock of sstmt list
@@ -23,7 +24,6 @@ type sstmt =
   | SWhile of sexpr * sstmt
   | SFor of sexpr * sexpr * sexpr * sstmt
   | SReturn of sexpr
-  | SLambda of bind list * bind list * sstmt list
 
 type sfunc_def = {
   srtyp: typ;
@@ -60,8 +60,8 @@ let rec string_of_sexpr (t, e) =
 	  | SBinop(e1, o, e2) ->
 		string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
 	  | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e
-	  | SCall(f, el) ->
-			 f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
+	  | SCall(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
+    | SLambda(id, e) -> "@ " ^ id ^ "{ " ^ string_of_sexpr e ^ " }"
 	) ^ ")"
 	
 let rec string_of_sstmt = function
@@ -73,11 +73,7 @@ let rec string_of_sstmt = function
                       string_of_sstmt s1 ^ "else\n" ^ string_of_sstmt s2
   | SWhile(e, s) -> "while (" ^ string_of_sexpr e ^ ") " ^ string_of_sstmt s
   | SFor (e1, e2, e3, s) -> "for (" ^ string_of_sexpr e1 ^ ", " ^ string_of_sexpr e2 ^ ", " ^ string_of_sexpr e3 ^ string_of_sstmt s
-  | SLambda (sformals, slocals, sbody) -> "@" ^ " (" ^ String.concat ", " 
-                                            (List.map (fun x -> string_of_args x) sformals) ^ ")\n{\n" ^
-                                            String.concat "" (List.map string_of_vdecl slocals) ^
-                                            String.concat "" (List.map string_of_sstmt sbody) ^
-                                            "}\n"
+
 let string_of_sfdecl fdecl =
   "def " ^ string_of_typ fdecl.srtyp ^ " " ^ fdecl.sfname ^ "(" ^ String.concat ", " 
   (List.map (fun x -> string_of_args x) fdecl.sformals) ^ ")\n{\n" ^

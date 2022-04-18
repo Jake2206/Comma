@@ -99,7 +99,6 @@ stmt_rule:
   | RETURN expr_rule SEMI                                 { Return $2       }
   | WHILE LPAREN expr_rule RPAREN stmt_rule				        { While ($3, $5)  }
   | FOR LPAREN expr_rule COMMA expr_rule COMMA expr_rule RPAREN stmt_rule { For ($3, $5, $7, $9) }
-  | LAMBDA LPAREN formals_opt RPAREN LBRACE vdecl_list_rule stmt_list_rule RBRACE  { Lambda ($3, $6, $7) }
 
 eif_rule:
     EIF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }
@@ -137,4 +136,5 @@ expr_rule:
   | expr_rule OR expr_rule        { Binop ($1, Or, $3)    }
   | ID ASSIGN expr_rule           { Assign ($1, $3)       }
   | LPAREN expr_rule RPAREN       { $2                    }
+  | LAMBDA ID LBRACE expr_rule RBRACE { Lambda($2, $4) }
 

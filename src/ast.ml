@@ -15,6 +15,7 @@ type expr =
   | Binop of expr * bop * expr
   | Assign of string * expr
   | Call of string * expr list
+  | Lambda of string * expr
 
 type bind = 
   AssignBind of typ * string * expr
@@ -27,7 +28,6 @@ type stmt =
   | While of expr * stmt
   | For of expr * expr * expr * stmt
   | Return of expr
-  | Lambda of bind list * bind list * stmt list
 
 type func_def = {
   rtyp: typ;
@@ -74,8 +74,8 @@ let rec string_of_expr = function
   | Binop(e1, o, e2) ->
     string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e
-  | Call(f, el) ->
-    f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+  | Call(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+  | Lambda(id, e) -> "@ " ^ id ^ "{ " ^ string_of_expr e ^ " }"  
 
 let string_of_typ = function
     Int -> "int"
@@ -106,11 +106,6 @@ let rec string_of_stmt = function
                       string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
   | For (e1, e2, e3, s) -> "for (" ^ string_of_expr e1 ^ ", " ^ string_of_expr e2 ^ ", " ^ string_of_expr e3 ^ string_of_stmt s
-  | Lambda (formals, locals, body) -> "@" ^ " (" ^ String.concat ", " 
-                                            (List.map (fun x -> string_of_args x) formals) ^ ")\n{\n" ^
-                                            String.concat "" (List.map string_of_vdecl locals) ^
-                                            String.concat "" (List.map string_of_stmt body) ^
-                                            "}\n"
 
 let string_of_fdecl fdecl =
   "def " ^ string_of_typ fdecl.rtyp ^ " " ^ fdecl.fname ^ "(" ^ String.concat ", " 

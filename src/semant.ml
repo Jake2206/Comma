@@ -113,7 +113,12 @@ let check (globals, functions) =
 				  in
 				  let args' = List.map2 check_call fd.formals args
 				  in (fd.rtyp, SCall(fname, args'))
-			
+			| Lambda(var, e) as lambda -> let lt = type_of_identifier var
+					and (rt, ederived) = expr e in
+					let err = "Illegal assignment: " ^ 
+							string_of_typ lt ^ " = " ^ string_of_typ rt ^ " in " ^ 
+							string_of_expr lambda
+					in (check_assign lt rt err, SLambda(var, (rt, ederived)))
 		in expr e
 	in
 	
@@ -204,11 +209,7 @@ let check (globals, functions) =
 				 | s :: ss       -> check_stmt s :: check_stmt_list ss
 				 | [] 			 -> []
 				in SBlock(check_stmt_list sl)
-			| Lambda (formals, locals, body) -> 
-								check_binds "formal" formals;
-								check_binds "local" locals;
-								check_stmt (Block body) (* This is a ploblem. The formals and locals need to be added to the context or we can only use already declared variables *)
-
+			
 	in  {
 		srtyp 		= func.rtyp;
 		sfname		= func.fname;

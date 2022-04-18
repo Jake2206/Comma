@@ -147,15 +147,14 @@ let%expect_test "matrix decl" = run_test "def int main() { matrix x = |[[1.2,2.3
     }
   |}];;
 
-let%expect_test "lambda func decl in main" = run_test "def int main() { int a=1; int b=1; @ ( int a, int b ) { return a+b; } }"; 
+let%expect_test "lambda func decl in main" = run_test "def int main() { int a = 1; int b=1; @ b { b = b*2 }; b = b+a; }"; 
   [%expect {|
   def int main()
   {
   int a = 1;
   int b = 1;
-  {
-  return (int : (int : a) + (int : b));
-  }
+  (int : @ b{ (int : b = (int : (int : b) * (int : 2))) });
+  (int : b = (int : (int : b) + (int : a)));
   } |}];;
 
 let%expect_test "complex func declr" = run_test "int g = 10; def int main() { } def int test_f ( int a, int b ) { int c = 9; if(a==b){return a;}else{return c;}}"; 
