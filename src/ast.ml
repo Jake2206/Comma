@@ -16,6 +16,10 @@ type expr =
   | Assign of string * expr
   | Call of string * expr list
 
+type bind = 
+  AssignBind of typ * string * expr
+  | NoAssignBind of typ * string 
+
 type stmt =
   | Block of stmt list
   | Expr of expr
@@ -23,10 +27,7 @@ type stmt =
   | While of expr * stmt
   | For of expr * expr * expr * stmt
   | Return of expr
-
-type bind = 
-	AssignBind of typ * string * expr
-	| NoAssignBind of typ * string 
+  | Lambda of bind list * bind list * stmt list
 
 type func_def = {
   rtyp: typ;
@@ -76,6 +77,26 @@ let rec string_of_expr = function
   | Call(f, el) ->
     f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
 
+let string_of_typ = function
+    Int -> "int"
+  | Bool -> "bool"
+  | Double -> "double"
+  | Char -> "char"
+  | Array -> "array"
+  | Matrix -> "matrix"
+  | Nul -> "nul"
+
+(* let string_of_vdecl (t, id, lit) = string_of_typ t ^ " " ^ id ^ " = " ^ string_of_expr lit ^ ";\n" *)
+let string_of_vdecl bind = 
+  match bind with 
+  AssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_expr e ^ ";\n"
+  | NoAssignBind(t, i) -> string_of_typ t ^ " " ^ i ^ ";\n"
+  
+let string_of_args bind = 
+  match bind with
+  AssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_expr e
+  | NoAssignBind(t, i) -> string_of_typ t ^ " " ^ i 
+
 let rec string_of_stmt = function
     Block(stmts) ->
     "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
@@ -85,27 +106,11 @@ let rec string_of_stmt = function
                       string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
   | For (e1, e2, e3, s) -> "for (" ^ string_of_expr e1 ^ ", " ^ string_of_expr e2 ^ ", " ^ string_of_expr e3 ^ string_of_stmt s
-
-let string_of_typ = function
-    Int -> "int"
-  | Bool -> "bool"
-  | Double -> "double"
-  | Char -> "char"
-  | Array -> "[]"
-  | Matrix -> "[][]"
-  | Nul -> "nul" 
-
-(* let string_of_vdecl (t, id, lit) = string_of_typ t ^ " " ^ id ^ " = " ^ string_of_expr lit ^ ";\n" *)
-let string_of_vdecl bind = 
-	match bind with 
-	AssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_expr e ^ ";\n"
-	| NoAssignBind(t, i) -> string_of_typ t ^ " " ^ i ^ ";\n"
-	
-let string_of_args bind = 
-	match bind with
-	AssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_expr e
-	| NoAssignBind(t, i) -> string_of_typ t ^ " " ^ i	
-
+  | Lambda (formals, locals, body) -> "@" ^ " (" ^ String.concat ", " 
+                                            (List.map (fun x -> string_of_args x) formals) ^ ")\n{\n" ^
+                                            String.concat "" (List.map string_of_vdecl locals) ^
+                                            String.concat "" (List.map string_of_stmt body) ^
+                                            "}\n"
 
 let string_of_fdecl fdecl =
   "def " ^ string_of_typ fdecl.rtyp ^ " " ^ fdecl.fname ^ "(" ^ String.concat ", " 

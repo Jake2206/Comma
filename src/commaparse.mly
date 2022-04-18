@@ -5,7 +5,7 @@ open Ast
 open Helpers
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE MULTIPLY DIVIDE PLUS MINUS ASSIGN LBRACK RBRACK
+%token SEMI LPAREN RPAREN LBRACE RBRACE MULTIPLY DIVIDE PLUS MINUS ASSIGN LBRACK RBRACK BAR
 %token EQ NEQ LT GT LTE GTE AND OR 
 %token IF ELSE EIF
 %token WHILE FOR IN
@@ -44,7 +44,6 @@ decls:                   { ([], [])                     }
  | vdecl_rule SEMI decls { (($1 :: get_first_item_in_tuple $3), get_second_item_in_tuple $3)  }
  | fdecl_rule decls      { (get_first_item_in_tuple $2), ($1 :: get_second_item_in_tuple $2)  }
 
-
 vdecl_list_rule:
   /*nothing*/                   { []       }
   | vdecl_rule SEMI vdecl_list_rule  { $1 :: $3 }
@@ -52,7 +51,7 @@ vdecl_list_rule:
 
 vdecl_rule:
   | typ_rule ID ASSIGN expr_rule { AssignBind ($1, $2, $4) }
-  | typ_rule LBRACK RBRACK ID ASSIGN typ_rule expr_rule { AssignBind ($1, $4, $7) }
+  | typ_rule LBRACK RBRACK ID ASSIGN expr_rule { AssignBind ($1, $4, $6) }
 
 vdecl_rule_no_assign:
   | typ_rule ID {NoAssignBind($1, $2)}
@@ -75,7 +74,7 @@ fdecl_rule:
       fname=$3;
       formals=$5;
       locals=$8;
-      body=$9
+      body=$9;
     }
   }
 
@@ -100,6 +99,7 @@ stmt_rule:
   | RETURN expr_rule SEMI                                 { Return $2       }
   | WHILE LPAREN expr_rule RPAREN stmt_rule				        { While ($3, $5)  }
   | FOR LPAREN expr_rule COMMA expr_rule COMMA expr_rule RPAREN stmt_rule { For ($3, $5, $7, $9) }
+  | LAMBDA LPAREN formals_opt RPAREN LBRACE vdecl_list_rule stmt_list_rule RBRACE  { Lambda ($3, $6, $7) }
 
 eif_rule:
     EIF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }
@@ -108,7 +108,7 @@ eif_rule:
 
 array_decl_rule:
   /*nothing*/        { [] }
-  | array_elems_rule { $1 }
+  | LBRACK array_elems_rule RBRACK { $2 }
 
 array_elems_rule:
   expr_rule                            { [$1]   }
@@ -121,8 +121,8 @@ expr_rule:
   | CHLIT                         { CharLit $1            }
   | ID                            { Id $1                 }
   | NUL		                        { NulLit 		            }
-  | LBRACK array_decl_rule RBRACK { ArrayLit $2           }
-  | MATRIX LBRACK array_decl_rule RBRACK { MatrixLit $3         }
+  | array_decl_rule               { ArrayLit $1           }
+  | BAR array_decl_rule BAR       { MatrixLit $2          }
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
   | expr_rule MULTIPLY expr_rule  { Binop ($1, Multiply, $3)   }
@@ -137,13 +137,4 @@ expr_rule:
   | expr_rule OR expr_rule        { Binop ($1, Or, $3)    }
   | ID ASSIGN expr_rule           { Assign ($1, $3)       }
   | LPAREN expr_rule RPAREN       { $2                    }
-  | ID LPAREN args_opt RPAREN     { Call ($1, $3)         }
-
-args_opt:
-  /*nothing*/ { [] }
-  | args { $1 }
-
-args:
-  expr_rule  { [$1] }
-  | expr_rule COMMA args { $1::$3 }
 

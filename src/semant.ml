@@ -17,7 +17,9 @@ let check (globals, functions) =
 	    rtyp = Nul;
 		fname = "print";
 		formals = [NoAssignBind(Char, "x")];
-		locals = []; body = [] } StringMap.empty
+		locals = []; 
+		body = [];
+		} StringMap.empty
 		(* NEEDS TO BE CHANGED TO ARRAY, CHAR ARRAY, OR LIST *)
 		(* NEED TO ADD REST OF STANDARD LIBRARY *)
 	in
@@ -69,8 +71,8 @@ let check (globals, functions) =
 			| BoolLit l -> (Bool, SBoolLit l)
 			| CharLit l -> (Char, SCharLit l)
 			| DoubLit l -> (Double, SDoubLit l)
-			| ArrayLit _ -> (Nul, SNulLit)  (* NEED TO FIX: Need to get type of elements in list? *) 
-			| MatrixLit _ -> (Nul, SNulLit) (* NEED TO FIX: Need to run array check on each list, need to check dimensions *)
+			| ArrayLit _ -> (Nul, SNulLit)
+			| MatrixLit _ -> (Matrix, SNulLit) (* NEED TO FIX: Need to run array check on each list, need to check dimensions *)
 			| Id l      -> (type_of_identifier l, SId l)
 			| Binop(e1, op, e2) -> 
 					let (lt, e1derived) = expr e1
@@ -111,6 +113,7 @@ let check (globals, functions) =
 				  in
 				  let args' = List.map2 check_call fd.formals args
 				  in (fd.rtyp, SCall(fname, args'))
+			
 		in expr e
 	in
 	
@@ -201,6 +204,11 @@ let check (globals, functions) =
 				 | s :: ss       -> check_stmt s :: check_stmt_list ss
 				 | [] 			 -> []
 				in SBlock(check_stmt_list sl)
+			| Lambda (formals, locals, body) -> 
+								check_binds "formal" formals;
+								check_binds "local" locals;
+								check_stmt (Block body) (* This is a ploblem. The formals and locals need to be added to the context or we can only use already declared variables *)
+
 	in  {
 		srtyp 		= func.rtyp;
 		sfname		= func.fname;
@@ -208,6 +216,6 @@ let check (globals, functions) =
 		slocals		= func.locals;
 		sbody		= match check_stmt (Block func.body) with
 			SBlock(sl) -> sl
-			| _ -> raise (Failure ("internal error: could not convert block"))	
+			| _ -> raise (Failure ("internal error: could not convert block"))
 	} 
 in (globals, (List.map check_function functions))

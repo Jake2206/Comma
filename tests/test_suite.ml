@@ -29,7 +29,7 @@ let%expect_test "divide expr in func" = run_test "def int main() { 2/5; }";
     (int : (int : 2) / (int : 5));
     } |}];;
 
-let%expect_test "if else stmt" = run_test "def int main() { int a = 2; if(a==2){a = 2;}else{a = 3;} }"; 
+let%expect_test "if else stmt" = run_test "def int main() { int a = 2; if(a==2){a = 2;}else{a = 3;} return a;}"; 
   [%expect {|
     def int main()
     {
@@ -42,6 +42,7 @@ let%expect_test "if else stmt" = run_test "def int main() { int a = 2; if(a==2){
     {
     (int : a = (int : 3));
     }
+    return (int : a);
     } |}];;
 
 let%expect_test "bool decl w/ assign" = run_test "def int main() { bool a = true; }"; 
@@ -104,7 +105,7 @@ let%expect_test "func declr w/ if else" = run_test "def int main() { } def int t
     }
     } |}];;
 
-let%expect_test "func decl w/ while stmt" = run_test "def int main() { } def int test_f ( int a, int b ) { int c = 9; while(a>b){a=a-1;}return a;}"; 
+let%expect_test "func decl w/ while stmt" = run_test "def int main() { } def int test_f ( int a, int b ) { int c = 9; while(a>b){a=a-1;} return a;}"; 
   [%expect {|
     def int main()
     {
@@ -118,7 +119,46 @@ let%expect_test "func decl w/ while stmt" = run_test "def int main() { } def int
     return (int : a);
     } |}];;
 
-let%expect_test _ = run_test "def int main() { } int g = 10; def int test_f ( int a, int b ) { int c = 9; if(a==b){return a;}else{return c;}}"; 
+let%expect_test "complex func declr" = run_test "int g = 10; def int main() { } def int test_f ( int a, int b ) { int c = 9; if(a==b){return a;}else{return c;}}"; 
+  [%expect {|
+    int g = 10;
+
+    def int main()
+    {
+    }
+    def int test_f(int a, int b)
+    {
+    int c = 9;
+    if ((bool : (int : a) == (int : b)))
+    {
+    return (int : a);
+    }
+    else
+    {
+    return (int : c);
+    }
+    } |}];;
+
+let%expect_test "matrix decl" = run_test "def int main() { matrix x = |[[1.2,2.3],[1.2,1.3]]|; }"; 
+  [%expect {|
+    def int main()
+    {
+    matrix x = [[1.22.3][1.21.3]];
+    }
+  |}];;
+
+let%expect_test "lambda func decl in main" = run_test "def int main() { int a=1; int b=1; @ ( int a, int b ) { return a+b; } }"; 
+  [%expect {|
+  def int main()
+  {
+  int a = 1;
+  int b = 1;
+  {
+  return (int : (int : a) + (int : b));
+  }
+  } |}];;
+
+let%expect_test "complex func declr" = run_test "int g = 10; def int main() { } def int test_f ( int a, int b ) { int c = 9; if(a==b){return a;}else{return c;}}"; 
   [%expect {|
     int g = 10;
 
@@ -138,34 +178,20 @@ let%expect_test _ = run_test "def int main() { } int g = 10; def int test_f ( in
     }
     } |}];;
 (*
+let%expect_test _ = run_test "def int main() { matrix x = |[[5.1,5.1], [1.2,2.3]]|; }"; 
+  [%expect {||}];;
 
 let%expect_test _ = run_test "def int main() { if (true) { } eif (false) {} }"; 
-  [%expect {|
-    def int main()
-    {
-    bool a = true;
-    } |}];;
+  [%expect {||}];;
 
 let%expect_test _ = run_test "def int main() { if (true) { } }"; 
-  [%expect {|
-    def int main()
-    {
-    bool a = true;
-    } |}];;
+  [%expect {||}];;
 
 let%expect_test _ = run_test "def int main() { int[] b = int [3, 4]; }"; 
-  [%expect {|
-    def int main()
-    {
-    char b = 'a';
-    } |}];;
+  [%expect {||}];;
 
-let%expect_test _ = run_test "def int main() { matrix [[3.1, 4.1],[3.1, 4.1]]; }"; 
-  [%expect {|
-    def int main()
-    {
-    char b = 'a';
-    } |}];;
+let%expect_test _ = run_test "def int main() { matrix m = |[[3.1, 4.1],[3.1, 4.1]]|; }"; 
+  [%expect {||}];;
 
 *)
 
@@ -202,7 +228,6 @@ let%expect_test "if expr w/ illegal semi" =
     Parsing.Parse_error
     |}]
 
-
 let%expect_test "func decl w/ no types in parameters" = 
   try run_test "def int main() { } def int test_f ( a, b ) { return a+b; }" with 
     Parsing.Parse_error -> print_endline "Parsing.Parse_error";
@@ -210,12 +235,11 @@ let%expect_test "func decl w/ no types in parameters" =
     Parsing.Parse_error
     |}]
 
-let%expect_test "func declr w/ no return type" = 
-  try run_test "def int main() { } def test_f ( a, b ) { return a+b; }" with 
+let%expect_test "func declr w/ assign in args" = 
+  try run_test "def int main() { } def int test_f ( int a=1*8, int b ) { return a; }" with 
     Parsing.Parse_error -> print_endline "Parsing.Parse_error";
   [%expect {|
     Parsing.Parse_error
     |}]
-
 
 
