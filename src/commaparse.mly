@@ -53,18 +53,18 @@ vdecl_rule:
   | typ_rule ID ASSIGN expr_rule { AssignBind ($1, $2, $4) }
   | typ_rule LBRACK RBRACK ID ASSIGN expr_rule { AssignBind ($1, $4, $6) }
 
-vdecl_rule_no_assign:
-  | typ_rule ID {NoAssignBind($1, $2)}
-
-
 /* formals_opt */
 formals_opt:
   /*nothing*/ { [] }
   | formals_list { $1 }
 
+formals_rule:
+  | typ_rule ID { NoAssignBind($1, $2) }
+  | ID LPAREN args_opt RPAREN { FuncRef($1, $3) }
+
 formals_list:
-  vdecl_rule_no_assign { [$1] }
-  | vdecl_rule_no_assign COMMA formals_list { $1::$3 }
+  formals_rule { [$1] }
+  | formals_rule COMMA formals_list { $1::$3 }
 
 fdecl_rule:
   FUNC typ_rule ID LPAREN formals_opt RPAREN LBRACE vdecl_list_rule stmt_list_rule RBRACE
@@ -107,7 +107,7 @@ eif_rule:
 
 array_decl_rule:
   /*nothing*/        { [] }
-  | LBRACK array_elems_rule RBRACK { $2 }
+  | array_elems_rule { $1 }
 
 array_elems_rule:
   expr_rule                            { [$1]   }
@@ -120,8 +120,8 @@ expr_rule:
   | CHLIT                         { CharLit $1            }
   | ID                            { Id $1                 }
   | NUL		                        { NulLit 		            }
-  | array_decl_rule               { ArrayLit $1           }
-  | BAR array_decl_rule BAR       { MatrixLit $2          }
+  | LBRACK array_decl_rule RBRACK { ArrayLit $2           }
+  | BAR LBRACK array_decl_rule RBRACK BAR       { MatrixLit $3          }
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
   | expr_rule MULTIPLY expr_rule  { Binop ($1, Multiply, $3)   }
@@ -136,5 +136,14 @@ expr_rule:
   | expr_rule OR expr_rule        { Binop ($1, Or, $3)    }
   | ID ASSIGN expr_rule           { Assign ($1, $3)       }
   | LPAREN expr_rule RPAREN       { $2                    }
-  | LAMBDA ID LBRACE expr_rule RBRACE { Lambda($2, $4) }
+  | LAMBDA typ_rule ID LBRACE expr_rule RBRACE { Lambda($2, $3, $5) }
+  | ID LPAREN args_opt RPAREN     { Call ($1, $3)         }
+
+args_opt:
+  /*nothing*/ { [] }
+  | args { $1 }
+
+args:
+  expr_rule  { [$1] }
+  | expr_rule COMMA args { $1::$3 }
 

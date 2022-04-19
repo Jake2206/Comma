@@ -56,6 +56,7 @@ let check (globals, functions) =
 							match x with
 								AssignBind(t, n, _) -> StringMap.add n t m
 								| NoAssignBind(t, n) -> StringMap.add n t m
+								| FuncRef(_, _) -> StringMap.add "" Nul m
 						) StringMap.empty symbol_list
 		in 
 		
@@ -71,7 +72,7 @@ let check (globals, functions) =
 			| BoolLit l -> (Bool, SBoolLit l)
 			| CharLit l -> (Char, SCharLit l)
 			| DoubLit l -> (Double, SDoubLit l)
-			| ArrayLit _ -> (Nul, SNulLit)
+			| ArrayLit _ -> (Nul, SNulLit) (* NEED TO FIX: need to check array type *)
 			| MatrixLit _ -> (Matrix, SNulLit) (* NEED TO FIX: Need to run array check on each list, need to check dimensions *)
 			| Id l      -> (type_of_identifier l, SId l)
 			| Binop(e1, op, e2) -> 
@@ -105,7 +106,8 @@ let check (globals, functions) =
 							match bind_arg with
 								AssignBind(_, _, _) -> raise (Failure ("illegal expression in function args"))
 								| NoAssignBind(t, _) -> t
-					   in 
+								| FuncRef(_, _) -> Nul				   
+							in 
 					   let (et, e') = expr e in
 					   let err = "Illegal argument found " ^ string_of_typ et ^
 								 " expected " ^ string_of_typ bind_typ ^ " in " ^ string_of_expr e
@@ -113,12 +115,12 @@ let check (globals, functions) =
 				  in
 				  let args' = List.map2 check_call fd.formals args
 				  in (fd.rtyp, SCall(fname, args'))
-			| Lambda(var, e) as lambda -> let lt = type_of_identifier var
+			| Lambda(typ, var, e) as lambda -> let lt = typ
 					and (rt, ederived) = expr e in
 					let err = "Illegal assignment: " ^ 
 							string_of_typ lt ^ " = " ^ string_of_typ rt ^ " in " ^ 
 							string_of_expr lambda
-					in (check_assign lt rt err, SLambda(var, (rt, ederived)))
+					in (check_assign lt rt err, SLambda(lt, var, (rt, ederived)))
 		in expr e
 	in
 	
@@ -148,8 +150,13 @@ let check (globals, functions) =
 			match (x, y) with
 				(AssignBind(_,n1,_), AssignBind(_,n2,_)) when n1 = n2 -> true
 				| (AssignBind(_,n1,_), NoAssignBind(_,n2)) when n1 = n2 -> true
+				| (AssignBind(_,_,_), FuncRef(_, _)) -> true
 			    | (NoAssignBind(_,n1), AssignBind(_,n2,_)) when n1 = n2 -> true
 				| (NoAssignBind(_, n1), NoAssignBind(_, n2)) when n1 = n2 -> true
+				| (NoAssignBind(_,_), FuncRef(_, _)) -> true
+				| (FuncRef(_,_), AssignBind(_,_,_)) -> true
+				| (FuncRef(_,_), NoAssignBind(_,_)) -> true
+				| (FuncRef(_,_), FuncRef(_,_)) -> true
 				| (_,_) -> false
 		in 
 		let rec dups = function 
@@ -163,8 +170,13 @@ let check (globals, functions) =
 					match (x, y) with
 						(AssignBind(_,n1,_), AssignBind(_,n2,_))     -> compare n1 n2
 						| (AssignBind(_,n1,_), NoAssignBind(_,n2))   -> compare n1 n2
+						| (AssignBind(_,_,_), FuncRef(_, _)) -> 0
 						| (NoAssignBind(_,n1), AssignBind(_,n2,_))   -> compare n1 n2
 						| (NoAssignBind(_, n1), NoAssignBind(_, n2)) -> compare n1 n2
+						| (NoAssignBind(_,_), FuncRef(_, _)) -> 0
+						| (FuncRef(_,_), AssignBind(_,_,_)) -> 0
+						| (FuncRef(_,_), NoAssignBind(_,_)) -> 0
+						| (FuncRef(_,_), FuncRef(_,_)) -> 0
 			) binds
 		in dups (sort_bind_list)
 	in 

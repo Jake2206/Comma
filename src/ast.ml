@@ -15,11 +15,12 @@ type expr =
   | Binop of expr * bop * expr
   | Assign of string * expr
   | Call of string * expr list
-  | Lambda of string * expr
+  | Lambda of typ * string * expr
 
 type bind = 
   AssignBind of typ * string * expr
   | NoAssignBind of typ * string 
+  | FuncRef of string * expr list
 
 type stmt =
   | Block of stmt list
@@ -59,7 +60,14 @@ let string_of_list a =
   List.iter (Buffer.add_string buf) a;
   Buffer.contents buf
 
-let sll_to_saa sll = Array.of_list (List.map Array.of_list sll)
+let string_of_typ = function
+    Int -> "int"
+  | Bool -> "bool"
+  | Double -> "double"
+  | Char -> "char"
+  | Array -> "array"
+  | Matrix -> "matrix"
+  | Nul -> "nul"
 
 let rec string_of_expr = function
     IntLit(l) -> string_of_int l
@@ -75,27 +83,20 @@ let rec string_of_expr = function
     string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e
   | Call(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
-  | Lambda(id, e) -> "@ " ^ id ^ "{ " ^ string_of_expr e ^ " }"  
-
-let string_of_typ = function
-    Int -> "int"
-  | Bool -> "bool"
-  | Double -> "double"
-  | Char -> "char"
-  | Array -> "array"
-  | Matrix -> "matrix"
-  | Nul -> "nul"
+  | Lambda(typ, id, e) -> "@ " ^ string_of_typ typ ^ id ^ "{ " ^ string_of_expr e ^ " }"  
 
 (* let string_of_vdecl (t, id, lit) = string_of_typ t ^ " " ^ id ^ " = " ^ string_of_expr lit ^ ";\n" *)
 let string_of_vdecl bind = 
   match bind with 
   AssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_expr e ^ ";\n"
   | NoAssignBind(t, i) -> string_of_typ t ^ " " ^ i ^ ";\n"
+  | FuncRef(f, el) -> f ^ "(" ^ String.concat "" (List.map string_of_expr el) ^ ")"  
   
 let string_of_args bind = 
   match bind with
   AssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_expr e
-  | NoAssignBind(t, i) -> string_of_typ t ^ " " ^ i 
+  | NoAssignBind(t, i) -> string_of_typ t ^ " " ^ i
+  | FuncRef(f, el) -> f ^ "(" ^ String.concat "" (List.map string_of_expr el) ^ ")"
 
 let rec string_of_stmt = function
     Block(stmts) ->

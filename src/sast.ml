@@ -15,7 +15,7 @@ and sx =
   | SBinop of sexpr * bop * sexpr
   | SAssign of string * sexpr
   | SCall of string * sexpr list
-  | SLambda of string * sexpr
+  | SLambda of typ * string * sexpr
 
 type sstmt =
   | SBlock of sstmt list
@@ -61,7 +61,7 @@ let rec string_of_sexpr (t, e) =
 		string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
 	  | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e
 	  | SCall(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
-    | SLambda(id, e) -> "@ " ^ id ^ "{ " ^ string_of_sexpr e ^ " }"
+    | SLambda(typ, id, e) -> "@ " ^ string_of_typ typ ^ id ^ "{ " ^ string_of_sexpr e ^ " }"
 	) ^ ")"
 	
 let rec string_of_sstmt = function
