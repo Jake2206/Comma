@@ -162,7 +162,7 @@ let%expect_test "func declr w/ func call" = run_test "def int main() { int a = 1
     return (int : (int : a) + (int : b));
     } |}];;
 
-let%expect_test "func declr w/ higher order func call" = run_test "def int main() { int c = test_f2(test_f(1,1), test_f(1,1)); } def int test_f ( int a, int b ) { return a+b; } def int test_f2 ( int a, int b ) { return a*b; }"; 
+let%expect_test "func declr w/ func call as arg" = run_test "def int main() { int c = test_f2(test_f(1,1), test_f(1,1)); } def int test_f ( int a, int b ) { return a+b; } def int test_f2 ( int a, int b ) { return a*b; }"; 
   [%expect {|
     def int main()
     {
@@ -203,6 +203,21 @@ let%expect_test _ = run_test "def int main() { if (true) { } }";
     else
     {
     }
+    } |}];;
+
+let%expect_test "func declr w/ func as param" = run_test "def int main() { return test_f(1,1, test_f2); } def int test_f ( int a, int b, f ) { return f(a,b); } def int test_f2 ( int a, int b ) { return a*b; }"; 
+  [%expect {|
+    def int main()
+    {
+    return (int : test_f((int : 1), (int : 1), (int : test_f2)));
+    }
+    def int test_f(int a, int b, f)
+    {
+    return (int : f((int : a), (int : b)));
+    }
+    def int test_f2(int a, int b)
+    {
+    return (int : (int : a) * (int : b));
     } |}];;
 
 (*
@@ -251,20 +266,6 @@ let%expect_test "int decl w/ illegal var name" =
 
 let%expect_test "if expr w/ illegal semi" = 
   try run_test "def int main() { if (true;) { } }" with 
-    Parsing.Parse_error -> print_endline "Parsing.Parse_error";
-  [%expect {|
-    Parsing.Parse_error
-    |}]
-
-let%expect_test "func decl w/ no types in parameters" = 
-  try run_test "def int main() { } def int test_f ( a, b ) { return a+b; }" with 
-    Parsing.Parse_error -> print_endline "Parsing.Parse_error";
-  [%expect {|
-    Parsing.Parse_error
-    |}]
-
-let%expect_test "func declr w/ assign in args" = 
-  try run_test "def int main() { } def int test_f ( int a=1*8, int b ) { return a; }" with 
     Parsing.Parse_error -> print_endline "Parsing.Parse_error";
   [%expect {|
     Parsing.Parse_error

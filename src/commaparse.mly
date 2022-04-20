@@ -60,7 +60,8 @@ formals_opt:
 
 formals_rule:
   | typ_rule ID { NoAssignBind($1, $2) }
-  | ID LPAREN args_opt RPAREN { FuncRef($1, $3) }
+  | ID LPAREN args_opt RPAREN { FuncCall($1, $3) }
+  | ID { FuncArg($1) }
 
 formals_list:
   formals_rule { [$1] }
