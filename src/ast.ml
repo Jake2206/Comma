@@ -9,7 +9,7 @@ type expr =
   | BoolLit of bool
   | CharLit of char
   | DoubLit of float
-  | ArrayLit of expr list
+  | ArrayLit of typ * expr list
   | MatrixLit of expr list
   | Id of string
   | Binop of expr * bop * expr
@@ -77,7 +77,7 @@ let rec string_of_expr = function
   | DoubLit(d) -> string_of_float d
   | BoolLit(true) -> "true"
   | BoolLit(false) -> "false"
-  | ArrayLit(a) -> "[" ^ string_of_list (List.map string_of_expr a) ^ "]"
+  | ArrayLit(t, a) -> string_of_typ t ^ " [" ^ string_of_list (List.map string_of_expr a) ^ "]"
   | MatrixLit(m) -> "[" ^ string_of_list (List.map string_of_expr m) ^ "]"(*"[" ^ string_of_list (List.map (fun a -> string_of_list (List.map string_of_expr a)) m) ^ "]"*)
   | Id(s) -> s
   | Binop(e1, o, e2) ->

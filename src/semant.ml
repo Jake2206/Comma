@@ -74,7 +74,13 @@ let check (globals, functions) =
 			| BoolLit l -> (Bool, SBoolLit l)
 			| CharLit l -> (Char, SCharLit l)
 			| DoubLit l -> (Double, SDoubLit l)
-			| ArrayLit _ -> (Nul, SNulLit) (* NEED TO FIX: need to check array type *)
+			| ArrayLit(t, a) -> let err rt ex = "Illegal array entry: " ^ 
+									string_of_typ t ^ " = " ^ string_of_typ rt ^ " in " ^ 
+									string_of_expr ex in
+								let get_derived e = let (ty, e') = expr e in ignore(check_assign t ty (err ty e)); (ty, e') in
+								let entries = List.map get_derived a in
+								(t, SArrayLit(t, entries))
+
 			| MatrixLit _ -> (Matrix, SNulLit) (* NEED TO FIX: Need to run array check on each list, need to check dimensions *)
 			| Id l      -> (type_of_identifier l, SId l)
 			| Binop(e1, op, e2) -> 
@@ -109,7 +115,11 @@ let check (globals, functions) =
 								AssignBind(_, _, _) -> raise (Failure ("illegal expression in function args"))
 								| NoAssignBind(t, _) -> t
 								| FuncCall(f, _) -> ignore(find_func f); Nul
-								| FuncArg(f) -> let fd2 = (find_func (string_of_expr e)) in ignore(func_decls := add_func !func_decls {rtyp=fd2.rtyp; fname=f; formals=fd2.formals; locals=fd2.locals; body=fd2.body}); fd2.rtyp
+								(* add higher order func to func list by copying func that it is referencing*)
+								| FuncArg(f) -> let fd2 = (find_func (string_of_expr e))
+												in ignore(
+													func_decls := add_func !func_decls {rtyp=fd2.rtyp; fname=f; formals=fd2.formals; locals=fd2.locals; body=fd2.body} 
+												);fd2.rtyp
 							in 
 					   let (et, e') = expr e in
 					   let err = "Illegal argument found " ^ string_of_typ et ^

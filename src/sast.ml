@@ -9,7 +9,7 @@ and sx =
   | SBoolLit of bool
   | SCharLit of char
   | SDoubLit of float
-  | SArrayLit of sexpr list
+  | SArrayLit of typ * sexpr list
   | SMatrixLit of sexpr list
   | SId of string
   | SBinop of sexpr * bop * sexpr
@@ -55,7 +55,7 @@ let rec string_of_sexpr (t, e) =
 	  | SBoolLit(true) -> "true"
 	  | SBoolLit(false) -> "false"
     | SMatrixLit(m) -> "[" ^ string_of_slist (List.map string_of_sexpr m) ^ "]" 
-	  | SArrayLit(a) -> "[" ^ string_of_slist (List.map string_of_sexpr a) ^ "]" 
+	  | SArrayLit(t, a) -> string_of_typ t ^ "[" ^ string_of_slist (List.map string_of_sexpr a) ^ "]" 
 	  | SId(s) -> s
 	  | SBinop(e1, o, e2) ->
 		string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2

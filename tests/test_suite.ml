@@ -220,10 +220,13 @@ let%expect_test "func declr w/ func as param" = run_test "def int main() { retur
     return (int : (int : a) * (int : b));
     } |}];;
 
+let%expect_test "int array declaration" = run_test "def int main() { int[] b = [3, 4] int; }"; 
+  [%expect {|
+    def int main()
+    {
+    int b = int [34];
+    } |}];;
 (*
-
-let%expect_test "int array declaration" = run_test "def int main() { int[] b = [3, 4]; }"; 
-  [%expect {||}];;
 
 let%expect_test "1d matrix declaration" = run_test "def int main() { matrix m = |[[3.1, 4.1],[3.1, 4.1]]|; }"; 
   [%expect {||}];;
@@ -271,4 +274,9 @@ let%expect_test "if expr w/ illegal semi" =
     Parsing.Parse_error
     |}]
 
-
+let%expect_test "Bad array entry" = 
+  try run_test "def int main() { int[] b = [3, 'a'] int; }" with 
+    Failure e -> print_endline e;
+  [%expect {|
+    Illegal array entry: int = char in 'a'
+    |}]
