@@ -10,7 +10,7 @@ type expr =
   | CharLit of char
   | DoubLit of float
   | ArrayLit of typ * expr list
-  | MatrixLit of (expr list) list
+  | MatrixLit of typ * (expr list) list
   | Id of string
   | Binop of expr * bop * expr
   | Assign of string * expr
@@ -73,7 +73,7 @@ let rec string_of_expr = function
   | BoolLit(true) -> "true"
   | BoolLit(false) -> "false"
   | ArrayLit(t, a) -> string_of_typ t ^ " [" ^ String.concat ", " (List.map string_of_expr a) ^ "]"
-  | MatrixLit(m) -> "[[" ^ String.concat "],[" (List.map (fun a -> String.concat ", " (List.map string_of_expr a)) m) ^ "]]"
+  | MatrixLit(t, m) -> string_of_typ t ^ "[[" ^ String.concat "],[" (List.map (fun a -> String.concat ", " (List.map string_of_expr a)) m) ^ "]]"
   | Id(s) -> s
   | Binop(e1, o, e2) ->
     string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2

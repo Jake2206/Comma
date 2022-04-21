@@ -80,16 +80,16 @@ let check (globals, functions) =
 								let get_derived e = let (ty, e') = expr e symbols in ignore(check_assign t ty (err ty e)); (ty, e') in
 								let entries = List.map get_derived a in
 								(t, SArrayLit(t, entries))
-			| MatrixLit(m) ->   let len = List.length (List.hd m) in
+			| MatrixLit(t, m) ->   let len = List.length (List.hd m) in
 								let err rt ex = "Illegal matrix entry: " ^ 
-									string_of_typ Double ^ " = " ^ string_of_typ rt ^ " in " ^ 
+									string_of_typ t ^ " = " ^ string_of_typ rt ^ " in " ^ 
 									string_of_expr ex in
-								let get_derived e = let (ty, e') = expr e symbols in ignore(check_assign Double ty (err ty e)); (ty, e') in
+								let get_derived e = let (ty, e') = expr e symbols in ignore(check_assign t ty (err ty e)); (ty, e') in
 								let get_single arr = let cur_len = List.length arr in
 													if cur_len = len then List.map get_derived arr else 
 													raise (Failure ("Illegal row length in matrix. Expected length " ^ string_of_int len ^ " got length " ^ string_of_int cur_len)) in
 								let entries = List.map get_single m in
-								(Matrix, SMatrixLit(entries))
+								(Matrix, SMatrixLit(t, entries))
 			| Id l      -> (type_of_identifier l symbols, SId l)
 			| Binop(e1, op, e2) -> 
 					let (lt, e1derived) = expr e1 symbols 

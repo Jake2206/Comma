@@ -132,8 +132,8 @@ expr_rule:
   | CHLIT                         { CharLit $1            }
   | ID                            { Id $1                 }
   | NUL		                        { NulLit 		            }
-  | LBRACK array_decl_rule RBRACK typ_rule  { ArrayLit ($4, $2)           }
-  | BAR LBRACK matrix_decl_rule RBRACK BAR       { MatrixLit $3          }
+  | LBRACK array_decl_rule RBRACK typ_rule { ArrayLit ($4, $2)           }
+  | BAR LBRACK matrix_decl_rule RBRACK BAR typ_rule      { MatrixLit ($6,$3)          }
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
   | expr_rule MULTIPLY expr_rule  { Binop ($1, Multiply, $3)   }

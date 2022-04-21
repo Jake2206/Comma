@@ -217,18 +217,18 @@ let%expect_test "int array declaration" = run_test "def int main() { int[] b = [
     int b = int [3, 4];
     } |}];;
 
-let%expect_test "1d matrix declaration" = run_test "def int main() { matrix m = |[[3.1, 4.1]]|; }"; 
+let%expect_test "1d matrix declaration" = run_test "def int main() { matrix m = |[[3, 4]]| int; }"; 
   [%expect {|
     def int main()
     {
-    matrix m = [[3.1, 4.1]];
+    matrix m = int[[3, 4]];
     } |}];;
 
-let%expect_test "2d matrix decl" = run_test "def int main() { matrix x = |[[1.2,2.3],[1.2,1.3]]|; }"; 
+let%expect_test "2d matrix decl" = run_test "def int main() { matrix x = |[[1.2,2.3],[1.2,1.3]]| double; }"; 
   [%expect {|
     def int main()
     {
-    matrix x = [[1.2, 2.3],[1.2, 1.3]];
+    matrix x = double[[1.2, 2.3],[1.2, 1.3]];
     }
   |}];;
 
