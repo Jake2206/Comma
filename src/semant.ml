@@ -80,8 +80,16 @@ let check (globals, functions) =
 								let get_derived e = let (ty, e') = expr e in ignore(check_assign t ty (err ty e)); (ty, e') in
 								let entries = List.map get_derived a in
 								(t, SArrayLit(t, entries))
-
-			| MatrixLit _ -> (Matrix, SNulLit) (* NEED TO FIX: Need to run array check on each list, need to check dimensions *)
+			| MatrixLit(m) ->   let len = List.length (List.hd m) in
+								let err rt ex = "Illegal matrix entry: " ^ 
+									string_of_typ Double ^ " = " ^ string_of_typ rt ^ " in " ^ 
+									string_of_expr ex in
+								let get_derived e = let (ty, e') = expr e in ignore(check_assign Double ty (err ty e)); (ty, e') in
+								let get_single arr = let cur_len = List.length arr in
+													if cur_len = len then List.map get_derived arr else 
+													raise (Failure ("Illegal row length in matrix. Expected length " ^ string_of_int len ^ " got length " ^ string_of_int cur_len)) in
+								let entries = List.map get_single m in
+								(Matrix, SMatrixLit(entries))
 			| Id l      -> (type_of_identifier l, SId l)
 			| Binop(e1, op, e2) -> 
 					let (lt, e1derived) = expr e1
@@ -128,12 +136,13 @@ let check (globals, functions) =
 				  in
 				  let args' = List.map2 check_call fd.formals args
 				  in (fd.rtyp, SCall(fname, args'))
-			| Lambda(typ, var, e) as lambda -> let lt = typ
-					and (rt, ederived) = expr e in
+			| Lambda(typ, arg, e) as lambda -> (* let func_add f = functions::f in *)
+					let (rt, ederived) = expr e in
 					let err = "Illegal assignment: " ^ 
-							string_of_typ lt ^ " = " ^ string_of_typ rt ^ " in " ^ 
+							string_of_typ typ ^ " = " ^ string_of_typ rt ^ " in " ^ 
 							string_of_expr lambda
-					in (check_assign lt rt err, SLambda(lt, var, (rt, ederived)))
+					(* in let new_func = {rtyp=typ; fname="@"; formals=[]; locals=[]; body=[]} needs to get the body and args here *)
+					in (check_assign typ rt err, SLambda(typ, arg, (rt, ederived)))
 		in expr e
 	in
 	

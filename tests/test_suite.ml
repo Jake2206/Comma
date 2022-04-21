@@ -139,7 +139,7 @@ let%expect_test "complex func declr" = run_test "int g = 10; def int main() { } 
     }
     } |}];;
 
-let%expect_test "lambda func decl in main" = run_test "def int main() { int a = 1; int b=1; b = @ int b { b = b*2 }; b = b+a; }";
+let%expect_test "lambda func decl in main" = run_test "def int main() { int a = 1; int b=1; b = @int c { c = c*2 }; b = b+a; }";
   [%expect {|
   def int main()
   {
@@ -177,7 +177,7 @@ let%expect_test "func declr w/ func call as arg" = run_test "def int main() { in
     return (int : (int : a) * (int : b));
     } |}];;
 
-let%expect_test _ = run_test "def int main() { if (true) { } eif (false) {} }"; 
+let%expect_test "if eif" = run_test "def int main() { if (true) { } eif (false) {} }"; 
   [%expect {|
     def int main()
     {
@@ -193,7 +193,7 @@ let%expect_test _ = run_test "def int main() { if (true) { } eif (false) {} }";
     }
     } |}];;
 
-let%expect_test _ = run_test "def int main() { if (true) { } }"; 
+let%expect_test "if no eif or else" = run_test "def int main() { if (true) { } }"; 
   [%expect {|
     def int main()
     {
@@ -224,12 +224,16 @@ let%expect_test "int array declaration" = run_test "def int main() { int[] b = [
   [%expect {|
     def int main()
     {
-    int b = int [34];
+    int b = int [3, 4];
     } |}];;
-(*
 
 let%expect_test "1d matrix declaration" = run_test "def int main() { matrix m = |[[3.1, 4.1],[3.1, 4.1]]|; }"; 
-  [%expect {||}];;
+  [%expect {|
+    def int main()
+    {
+    matrix m = [[3.1, 4.1],[3.1, 4.1]];
+    } |}];;
+(*
 
 let%expect_test "2d matrix decl" = run_test "def int main() { matrix x = |[[1.2,2.3],[1.2,1.3]]|; }"; 
   [%expect {|

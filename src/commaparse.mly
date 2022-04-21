@@ -114,6 +114,14 @@ array_elems_rule:
   expr_rule                            { [$1]   }
   | expr_rule COMMA array_elems_rule   { $1::$3 }
 
+matrix_decl_rule:
+  /*nothing*/        { [] }
+  | matrix_elems_rule { $1 }
+
+matrix_elems_rule:
+  LBRACK array_decl_rule RBRACK   { [$2] }
+  | LBRACK array_decl_rule RBRACK COMMA matrix_elems_rule { $2::$5 }
+
 expr_rule:
   | BLIT                          { BoolLit $1            }
   | INTLIT                        { IntLit  $1            }
@@ -122,7 +130,7 @@ expr_rule:
   | ID                            { Id $1                 }
   | NUL		                        { NulLit 		            }
   | LBRACK array_decl_rule RBRACK typ_rule  { ArrayLit ($4, $2)           }
-  | BAR LBRACK array_decl_rule RBRACK BAR       { MatrixLit $3          }
+  | BAR LBRACK matrix_decl_rule RBRACK BAR       { MatrixLit $3          }
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
   | expr_rule MULTIPLY expr_rule  { Binop ($1, Multiply, $3)   }
