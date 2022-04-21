@@ -48,7 +48,6 @@ vdecl_list_rule:
   /*nothing*/                   { []       }
   | vdecl_rule SEMI vdecl_list_rule  { $1 :: $3 }
 
-
 vdecl_rule:
   | typ_rule ID ASSIGN expr_rule { AssignBind ($1, $2, $4) }
   | typ_rule LBRACK RBRACK ID ASSIGN expr_rule { AssignBind ($1, $4, $6) }
@@ -122,6 +121,10 @@ matrix_elems_rule:
   LBRACK array_decl_rule RBRACK   { [$2] }
   | LBRACK array_decl_rule RBRACK COMMA matrix_elems_rule { $2::$5 }
 
+expr_list_rule:
+  expr_rule            { [$1] }
+  | expr_rule SEMI expr_list_rule { $1::$3 }
+
 expr_rule:
   | BLIT                          { BoolLit $1            }
   | INTLIT                        { IntLit  $1            }
@@ -145,7 +148,7 @@ expr_rule:
   | expr_rule OR expr_rule        { Binop ($1, Or, $3)    }
   | ID ASSIGN expr_rule           { Assign ($1, $3)       }
   | LPAREN expr_rule RPAREN       { $2                    }
-  | LAMBDA typ_rule ID LBRACE expr_rule RBRACE { Lambda($2, $3, $5) }
+  | LAMBDA typ_rule ID LBRACE expr_list_rule RBRACE { Lambda($2, $3, $5) }
   | ID LPAREN args_opt RPAREN     { Call ($1, $3)         }
 
 args_opt:

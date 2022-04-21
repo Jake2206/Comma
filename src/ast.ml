@@ -15,7 +15,7 @@ type expr =
   | Binop of expr * bop * expr
   | Assign of string * expr
   | Call of string * expr list
-  | Lambda of typ * string * expr
+  | Lambda of typ * string * expr list
 
 type bind = 
   AssignBind of typ * string * expr
@@ -79,7 +79,7 @@ let rec string_of_expr = function
     string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e
   | Call(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
-  | Lambda(typ, id, e) -> "@ " ^ string_of_typ typ ^ id ^ "{ " ^ string_of_expr e ^ " }"  
+  | Lambda(typ, id, e) -> "@ " ^ string_of_typ typ ^ id ^ "{ " ^ String.concat "\n" (List.map string_of_expr e) ^ " }"  
 
 (* let string_of_vdecl (t, id, lit) = string_of_typ t ^ " " ^ id ^ " = " ^ string_of_expr lit ^ ";\n" *)
 let string_of_vdecl bind = 

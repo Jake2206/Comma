@@ -61,14 +61,14 @@ let check (globals, functions) =
 						) StringMap.empty symbol_list
 		in 
 		
-		let type_of_identifier s =
+		let type_of_identifier s symbols =
 			try StringMap.find s symbols
 			with Not_found -> try (StringMap.find s !func_decls).rtyp
 			with Not_found ->raise (Failure ("undeclared symbol: " ^ s))
 		in 			
 
         (* Evaluate an expression *)		
-		let rec expr = function
+		let rec expr e symbols = match e with
 			NulLit -> (Nul, SNulLit)
 			| IntLit l -> (Int, SIntLit l)
 			| BoolLit l -> (Bool, SBoolLit l)
@@ -77,23 +77,23 @@ let check (globals, functions) =
 			| ArrayLit(t, a) -> let err rt ex = "Illegal array entry: " ^ 
 									string_of_typ t ^ " = " ^ string_of_typ rt ^ " in " ^ 
 									string_of_expr ex in
-								let get_derived e = let (ty, e') = expr e in ignore(check_assign t ty (err ty e)); (ty, e') in
+								let get_derived e = let (ty, e') = expr e symbols in ignore(check_assign t ty (err ty e)); (ty, e') in
 								let entries = List.map get_derived a in
 								(t, SArrayLit(t, entries))
 			| MatrixLit(m) ->   let len = List.length (List.hd m) in
 								let err rt ex = "Illegal matrix entry: " ^ 
 									string_of_typ Double ^ " = " ^ string_of_typ rt ^ " in " ^ 
 									string_of_expr ex in
-								let get_derived e = let (ty, e') = expr e in ignore(check_assign Double ty (err ty e)); (ty, e') in
+								let get_derived e = let (ty, e') = expr e symbols in ignore(check_assign Double ty (err ty e)); (ty, e') in
 								let get_single arr = let cur_len = List.length arr in
 													if cur_len = len then List.map get_derived arr else 
 													raise (Failure ("Illegal row length in matrix. Expected length " ^ string_of_int len ^ " got length " ^ string_of_int cur_len)) in
 								let entries = List.map get_single m in
 								(Matrix, SMatrixLit(entries))
-			| Id l      -> (type_of_identifier l, SId l)
+			| Id l      -> (type_of_identifier l symbols, SId l)
 			| Binop(e1, op, e2) -> 
-					let (lt, e1derived) = expr e1
-					and (rt, e2derived) = expr e2 in
+					let (lt, e1derived) = expr e1 symbols 
+					and (rt, e2derived) = expr e2 symbols in
 					let same = lt = rt in
 					let ty = match op with
 						Add | Sub | Multiply | Divide when same && lt = Int  -> Int
@@ -105,8 +105,8 @@ let check (globals, functions) =
 						| _ -> raise (Failure ("illegal binary operation"))
 					in (ty, SBinop((lt, e1derived), op, (rt, e2derived)))
 			| Assign(var, e) as ex -> 
-					let lt = type_of_identifier var
-					and (rt, ederived) = expr e in
+					let lt = type_of_identifier var symbols
+					and (rt, ederived) = expr e symbols in
 					let err = "Illegal assignment: " ^ 
 							string_of_typ lt ^ " = " ^ string_of_typ rt ^ " in " ^ 
 							string_of_expr ex
@@ -123,29 +123,26 @@ let check (globals, functions) =
 								AssignBind(_, _, _) -> raise (Failure ("illegal expression in function args"))
 								| NoAssignBind(t, _) -> t
 								| FuncCall(f, _) -> ignore(find_func f); Nul
-								(* add higher order func to func list by copying func that it is referencing*)
+								(* add higher order func to func list by copying func that it is referencing THIS WILL ONLY ALLOW ONE USE OF THE ARG*)
 								| FuncArg(f) -> let fd2 = (find_func (string_of_expr e))
 												in ignore(
 													func_decls := add_func !func_decls {rtyp=fd2.rtyp; fname=f; formals=fd2.formals; locals=fd2.locals; body=fd2.body} 
 												);fd2.rtyp
 							in 
-					   let (et, e') = expr e in
+					   let (et, e') = expr e symbols in
 					   let err = "Illegal argument found " ^ string_of_typ et ^
 								 " expected " ^ string_of_typ bind_typ ^ " in " ^ string_of_expr e
 					   in (check_assign bind_typ et err, e')
 				  in
 				  let args' = List.map2 check_call fd.formals args
 				  in (fd.rtyp, SCall(fname, args'))
-			| Lambda(typ, arg, e) as lambda -> (* let func_add f = functions::f in *)
-					let (rt, ederived) = expr e in
-					let err = "Illegal assignment: " ^ 
-							string_of_typ typ ^ " = " ^ string_of_typ rt ^ " in " ^ 
-							string_of_expr lambda
-					(* in let new_func = {rtyp=typ; fname="@"; formals=[]; locals=[]; body=[]} needs to get the body and args here *)
-					in (check_assign typ rt err, SLambda(typ, arg, (rt, ederived)))
-		in expr e
+			| Lambda(typ, arg, el) ->
+					let new_symbols = StringMap.add arg typ symbols
+					in let one_ex e = expr e new_symbols
+					in let el' = List.map one_ex el
+					in (typ, SLambda(typ, arg, el'))
+		in expr e symbols
 	in
-	
 	
 	let check_binds (kind  : string) (binds : bind list) =
 		(* Check variables bind to a real type (not null)

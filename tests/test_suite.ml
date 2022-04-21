@@ -139,16 +139,6 @@ let%expect_test "complex func declr" = run_test "int g = 10; def int main() { } 
     }
     } |}];;
 
-let%expect_test "lambda func decl in main" = run_test "def int main() { int a = 1; int b=1; b = @int c { c = c*2 }; b = b+a; }";
-  [%expect {|
-  def int main()
-  {
-  int a = 1;
-  int b = 1;
-  (int : b = (int : @ intb{ (int : b = (int : (int : b) * (int : 2))) }));
-  (int : b = (int : (int : b) + (int : a)));
-  } |}];;
-
 let%expect_test "func declr w/ func call" = run_test "def int main() { int a = 1; int b = 1; int c = test_f(a, b); } def int test_f ( int a, int b ) { return a+b; }"; 
   [%expect {|
     def int main()
@@ -227,23 +217,30 @@ let%expect_test "int array declaration" = run_test "def int main() { int[] b = [
     int b = int [3, 4];
     } |}];;
 
-let%expect_test "1d matrix declaration" = run_test "def int main() { matrix m = |[[3.1, 4.1],[3.1, 4.1]]|; }"; 
+let%expect_test "1d matrix declaration" = run_test "def int main() { matrix m = |[[3.1, 4.1]]|; }"; 
   [%expect {|
     def int main()
     {
-    matrix m = [[3.1, 4.1],[3.1, 4.1]];
+    matrix m = [[3.1, 4.1]];
     } |}];;
-(*
 
 let%expect_test "2d matrix decl" = run_test "def int main() { matrix x = |[[1.2,2.3],[1.2,1.3]]|; }"; 
   [%expect {|
     def int main()
     {
-    matrix x = [[1.22.3][1.21.3]];
+    matrix x = [[1.2, 2.3],[1.2, 1.3]];
     }
   |}];;
 
-*)
+let%expect_test "lambda func decl in main" = run_test "def int main() { int a = 1; int b=1; b = @int c { c = c*2+a*5 }; b = b+a; }";
+  [%expect {|
+  def int main()
+  {
+  int a = 1;
+  int b = 1;
+  (int : b = (int : @ intc{ (int : c = (int : (int : (int : c) * (int : 2)) + (int : (int : a) * (int : 5)))) }));
+  (int : b = (int : (int : b) + (int : a)));
+  } |}];;
 
 
 (* Failure Tests begin here 
