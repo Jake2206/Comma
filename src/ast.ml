@@ -1,7 +1,7 @@
 type bop =  Multiply | Divide | Add | Sub | Equal | Neq | Less | Great | LessEqual | GreatEqual | And | Or
 type uop = Neg | Not
 
-type typ = Int | Bool | Double | Char | Nul | Array | Matrix 
+type typ = Int | Bool | Double | Char | Void | Array | Matrix 
 
 type expr =
   | NulLit 
@@ -63,7 +63,7 @@ let string_of_typ = function
   | Char -> "char"
   | Array -> "array"
   | Matrix -> "matrix"
-  | Nul -> "nul"
+  | Void -> "void"
 
 let rec string_of_expr = function
     IntLit(l) -> string_of_int l

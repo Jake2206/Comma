@@ -50,6 +50,7 @@ rule tokenize = parse
 | "false"  { BLIT(false) }
 | "def"    { FUNC }
 | "nul"    { NUL  }
+| "void"   { VOID }
 | "in"     { IN   }
 | "row"    { ROW  } 
 | "col"    { COL  }

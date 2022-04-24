@@ -12,6 +12,7 @@ open Helpers
 %token FUNC RETURN COMMA
 %token ROW COL
 %token DOUBLE INT BOOL CHAR ARRAY MATRIX NUL
+%token VOID
 %token COMMA LAMBDA
 %token <float> FLIT
 %token <int> INTLIT
@@ -26,6 +27,7 @@ open Helpers
 %nonassoc NOELSEEIF
 %nonassoc EIF
 %nonassoc ELSE
+%right EXP_NUL
 %right ASSIGN
 %left OR 
 %left AND
@@ -33,6 +35,7 @@ open Helpers
 %left LT GT LTE GTE 
 %left PLUS MINUS
 %left MULTIPLY DIVIDE
+
 
 %%
 
@@ -49,8 +52,9 @@ vdecl_list_rule:
   | vdecl_rule SEMI vdecl_list_rule  { $1 :: $3 }
 
 vdecl_rule:
-  | typ_rule ID ASSIGN expr_rule { AssignBind ($1, $2, $4) }
+  | typ_rule ID ASSIGN expr_rule               { AssignBind ($1, $2, $4) }
   | typ_rule LBRACK RBRACK ID ASSIGN expr_rule { AssignBind ($1, $4, $6) }
+  | typ_rule ID                                { NoAssignBind ($1, $2)   }
 
 /* formals_opt */
 formals_opt:
@@ -85,6 +89,7 @@ typ_rule:
   | CHAR    { Char   } 
   | ARRAY   { Array  }
   | MATRIX  { Matrix }
+  | VOID    { Void   }
 
 stmt_list_rule:
     /* nothing */               { []     }
@@ -131,7 +136,7 @@ expr_rule:
   | FLIT                          { DoubLit $1            }
   | CHLIT                         { CharLit $1            }
   | ID                            { Id $1                 }
-  | NUL		                        { NulLit 		            }
+  | NUL	                          { NulLit 		          } /* source of the shift/reduce conflict */
   | LBRACK array_decl_rule RBRACK typ_rule { ArrayLit ($4, $2)           }
   | BAR LBRACK matrix_decl_rule RBRACK BAR typ_rule      { MatrixLit ($6,$3)          }
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }

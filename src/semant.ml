@@ -14,15 +14,115 @@ let check (globals, functions) =
 	
 	(* Check built-in functions *)
 	let built_in_decls =
-      StringMap.add "print" {
-	    rtyp = Nul;
-		fname = "print";
-		formals = [NoAssignBind(Char, "x")];
-		locals = []; 
-		body = [];
-		} StringMap.empty
-		(* NEEDS TO BE CHANGED TO ARRAY, CHAR ARRAY, OR LIST *)
-		(* NEED TO ADD REST OF STANDARD LIBRARY *)
+		let map = StringMap.empty in
+		let map = 
+			StringMap.add "print" {
+				rtyp = Void;
+				fname = "print";
+				formals = [NoAssignBind(Array, "char_array")]; 
+				locals = []; 
+				body = [];
+			} map
+		in 
+		let map = 
+			StringMap.add "parseCSV" {
+				rtyp = Matrix;
+				fname = "parseCSV";
+				formals = [NoAssignBind(Array, "input_filepath")]; 
+				locals = []; 
+				body = [];
+			} map
+		in
+		let map = 
+			StringMap.add "outputCSV" {
+				rtyp = Void;
+				fname = "outputCSV";
+				formals = [NoAssignBind(Matrix, "matrix"); NoAssignBind(Array, "outputFilepath")];  (* NEEDS TO BE CHANGED TO ARRAY, CHAR ARRAY, OR LIST *)
+				locals = []; 
+				body = [];
+			} map
+		in
+		let map =
+			StringMap.add "scalarMulti" {
+				rtyp = Matrix;
+				fname = "scalarMulti";
+				formals = [NoAssignBind(Double, "scalar"); NoAssignBind(Matrix, "base_matrix")];
+				locals = []; 
+				body = [];
+			} map
+		in
+		let map = 
+			StringMap.add "scalarDiv" {
+				rtyp = Matrix;
+				fname = "scalarDiv";
+				formals = [NoAssignBind(Double, "scalar"); NoAssignBind(Matrix, "base_matrix")];  
+				locals = []; 
+				body = [];
+			} map
+		in
+		let map =
+			StringMap.add "subtractMatrix" {
+				rtyp = Matrix;
+				fname = "subtractMatrix";
+				formals = [NoAssignBind(Matrix, "base_matrix"); NoAssignBind(Matrix, "sub_matrix")]; 
+				locals = []; 
+				body = [];
+			} map
+		in 
+		let map = 
+			StringMap.add "addMatrix" {
+				rtyp = Matrix;
+				fname = "addMatrix";
+				formals = [NoAssignBind(Matrix, "base_matrix"); NoAssignBind(Matrix, "add_matrix")];
+				locals = []; 
+				body = [];
+			} map
+		in
+		let map = 
+			StringMap.add "dotProduct" {
+				rtyp = Matrix;
+				fname = "dotProduct";
+				formals = [NoAssignBind(Matrix, "base_matrix"); NoAssignBind(Matrix, "dot_matrix")];
+				locals = []; 
+				body = [];
+			} map
+		in
+		let map =
+			StringMap.add "crossProduct" {
+				rtyp = Matrix;
+				fname = "crossProduct";
+				formals = [NoAssignBind(Array, "base_vector"); NoAssignBind(Array, "cross_vector")];
+				locals = []; 
+				body = [];
+			} map
+		in
+		let map = 
+			StringMap.add "length" {
+				rtyp = Int;
+				fname = "length";
+				formals = [NoAssignBind(Array, "array")];
+				locals = []; 
+				body = [];
+			} map
+		in
+		let map =
+			StringMap.add "dimension" {
+				rtyp = Array;
+				fname = "dimension";
+				formals = [NoAssignBind(Matrix, "matrix")];
+				locals = []; 
+				body = [];
+			} map
+		in 
+		let map = 
+			StringMap.add "retrieveElement" {
+				rtyp = Void;          (* NEED TO FIGURE OUT HOW TO DIFFERENT MATRIX TYPES *)
+				fname = "retrieveElement";
+				formals = [NoAssignBind(Int, "row_index"); NoAssignBind(Int, "column_index"); NoAssignBind(Matrix, "matrix")];
+				locals = []; 
+				body = [];
+			} map
+		in map
 	in
 	
 	(* Add function name to symbol table *)
@@ -56,8 +156,8 @@ let check (globals, functions) =
 							match x with
 								AssignBind(t, n, _) -> StringMap.add n t m
 								| NoAssignBind(t, n) -> StringMap.add n t m
-								| FuncCall(f,_) -> StringMap.add f Nul m (* This might be an issue *)
-								| FuncArg(f) -> StringMap.add f Nul m
+								| FuncCall(f,_) -> StringMap.add f Void m (* This might be an issue *)
+								| FuncArg(f) -> StringMap.add f Void m
 						) StringMap.empty symbol_list
 		in 
 		
@@ -69,7 +169,7 @@ let check (globals, functions) =
 
         (* Evaluate an expression *)		
 		let rec expr e symbols = match e with
-			NulLit -> (Nul, SNulLit)
+			NulLit -> (Void, SNulLit)      (* What is the internal representation of null, 0? Void for now*)
 			| IntLit l -> (Int, SIntLit l)
 			| BoolLit l -> (Bool, SBoolLit l)
 			| CharLit l -> (Char, SCharLit l)
@@ -122,7 +222,7 @@ let check (globals, functions) =
 							match bind_arg with
 								AssignBind(_, _, _) -> raise (Failure ("illegal expression in function args"))
 								| NoAssignBind(t, _) -> t
-								| FuncCall(f, _) -> ignore(find_func f); Nul
+								| FuncCall(f, _) -> ignore(find_func f); Void
 								(* add higher order func to func list by copying func that it is referencing THIS WILL ONLY ALLOW ONE USE OF THE ARG*)
 								| FuncArg(f) -> let fd2 = (find_func (string_of_expr e))
 												in ignore(
@@ -148,8 +248,8 @@ let check (globals, functions) =
 		(* Check variables bind to a real type (not null)
 			And check that formals do not have expression with declaration*)
 		List.iter (function
-			AssignBind(Nul, _, _)  -> raise (Failure ("illegal bind: cannot be of type nul"))
-			| NoAssignBind(Nul, _) -> raise (Failure ("illegal bind: cannot be of type nul"))
+			AssignBind(Void, _, _)  -> raise (Failure ("illegal bind: cannot be of type nul"))
+			| NoAssignBind(Void, _) -> raise (Failure ("illegal bind: cannot be of type nul"))
 			| AssignBind(_, _, _) when kind = "formal" -> raise (Failure ("illegal bind: cannot bind expression in function arguments"))
 			| _ -> ()) binds;
 		
@@ -157,10 +257,15 @@ let check (globals, functions) =
 		List.iter (function
 		    AssignBind(t, _, e) -> 
 			    let (dt, _) = derive_expr_in_context e binds in
-				if dt != t then raise (Failure ("Illegal bind: mismatched types: expected '" 
-					^ string_of_typ t ^ "' got '" ^ string_of_typ dt 
-					^ "' instead in expr: " ^ string_of_expr e))
-				else ()
+				if dt == t then
+					()
+				else
+					if dt == Void then   (* Need to fix if we change type of Nul *)
+						()
+					else
+						raise (Failure ("Illegal bind: mismatched types: expected '" 
+							^ string_of_typ t ^ "' got '" ^ string_of_typ dt 
+							^ "' instead in expr: " ^ string_of_expr e))
 			| _ -> ()) binds;
 
 		(* Check no two variables have same name within same scope. *)
@@ -235,9 +340,13 @@ let check (globals, functions) =
 			| While (p, s) -> SWhile(check_bool_expr p, check_stmt s)
 			| Return e -> let (typder, exprder) = derive_expr_in_context e context in
 				if typder = func.rtyp then SReturn (typder, exprder)
-				else raise (Failure ("illegal return: return gives " ^ string_of_typ typder ^ " expected "
-									(*^ string_of_typ func.rtyp ^ " in " ^ string_of_expr exprder*)
-									))
+				else 
+					if typder = Void then 
+						SReturn(typder, exprder)
+					else
+						raise (Failure ("illegal return: return gives " ^ string_of_typ typder ^ " expected "
+											(*^ string_of_typ func.rtyp ^ " in " ^ string_of_expr exprder*)
+											))
 			| Block sl -> 
 				let rec check_stmt_list = function
 				 [Return _ as s ] -> [check_stmt s]
