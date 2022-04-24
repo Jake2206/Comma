@@ -54,8 +54,8 @@ let rec string_of_sexpr (t, e) =
 	  | SDoubLit(d) -> string_of_float d
 	  | SBoolLit(true) -> "true"
 	  | SBoolLit(false) -> "false"
-    | SMatrixLit(t, m) -> string_of_typ t ^ "[" ^ string_of_slist (List.map (fun a -> string_of_slist (List.map string_of_sexpr a)) m) ^ "]" 
-	  | SArrayLit(t, a) -> string_of_typ t ^ "[" ^ (String.concat ", " (List.map string_of_sexpr a)) ^ "]" 
+    | SMatrixLit(t, m) -> "|[" ^ string_of_slist (List.map (fun a -> string_of_slist (List.map string_of_sexpr a)) m) ^ "]| " ^ string_of_typ t
+	  | SArrayLit(t, a) ->  "[" ^ (String.concat ", " (List.map string_of_sexpr a)) ^ "] " ^ string_of_typ t
 	  | SId(s) -> s
 	  | SBinop(e1, o, e2) ->
 		string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2

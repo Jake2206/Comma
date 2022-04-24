@@ -210,25 +210,25 @@ let%expect_test "func declr w/ func as param" = run_test "def int main() { retur
     return (int : (int : a) * (int : b));
     } |}];;
 
-let%expect_test "int array declaration" = run_test "def int main() { int[] b = [3, 4] int; }"; 
+let%expect_test "int array declaration" = run_test "def int main() { array b = [3, 4] int; }"; 
   [%expect {|
     def int main()
     {
-    int b = int [3, 4];
+    array b = [3, 4] int;
     } |}];;
 
 let%expect_test "1d matrix declaration" = run_test "def int main() { matrix m = |[[3, 4]]| int; }"; 
   [%expect {|
     def int main()
     {
-    matrix m = int[[3, 4]];
+    matrix m = |[[3, 4]]| int;
     } |}];;
 
 let%expect_test "2d matrix decl" = run_test "def int main() { matrix x = |[[1.2,2.3],[1.2,1.3]]| double; }"; 
   [%expect {|
     def int main()
     {
-    matrix x = double[[1.2, 2.3],[1.2, 1.3]];
+    matrix x = |[[1.2, 2.3],[1.2, 1.3]]| double;
     }
   |}];;
 
@@ -241,7 +241,6 @@ let%expect_test "lambda func decl in main" = run_test "def int main() { int a = 
   (int : b = (int : @ intc{ (int : c = (int : (int : (int : c) * (int : 2)) + (int : (int : a) * (int : 5)))) }));
   (int : b = (int : (int : b) + (int : a)));
   } |}];;
-
 
 (* Failure Tests begin here 
   NOTE: our custom exceptions are caught as generic failures but ocaml 
@@ -276,8 +275,15 @@ let%expect_test "if expr w/ illegal semi" =
     |}]
 
 let%expect_test "Bad array entry" = 
-  try run_test "def int main() { int[] b = [3, 'a'] int; }" with 
+  try run_test "def int main() { array b = [3, 'a'] int; }" with 
     Failure e -> print_endline e;
   [%expect {|
     Illegal array entry: int = char in 'a'
+    |}]
+
+let%expect_test "Assign array to int variable" = 
+  try run_test "def int main() { array b = [3, 4] int; int c = b;}" with 
+    Failure e -> print_endline e;
+  [%expect {|
+    Illegal bind: mismatched types: expected 'int' got 'array' instead in expr: b
     |}]

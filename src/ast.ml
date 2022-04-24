@@ -72,8 +72,8 @@ let rec string_of_expr = function
   | DoubLit(d) -> string_of_float d
   | BoolLit(true) -> "true"
   | BoolLit(false) -> "false"
-  | ArrayLit(t, a) -> string_of_typ t ^ " [" ^ String.concat ", " (List.map string_of_expr a) ^ "]"
-  | MatrixLit(t, m) -> string_of_typ t ^ "[[" ^ String.concat "],[" (List.map (fun a -> String.concat ", " (List.map string_of_expr a)) m) ^ "]]"
+  | ArrayLit(t, a) ->  "[" ^ String.concat ", " (List.map string_of_expr a) ^ "] " ^ string_of_typ t
+  | MatrixLit(t, m) -> "|[[" ^ String.concat "],[" (List.map (fun a -> String.concat ", " (List.map string_of_expr a)) m) ^ "]]| " ^ string_of_typ t
   | Id(s) -> s
   | Binop(e1, o, e2) ->
     string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2

@@ -53,7 +53,6 @@ vdecl_list_rule:
 
 vdecl_rule:
   | typ_rule ID ASSIGN expr_rule               { AssignBind ($1, $2, $4) }
-  | typ_rule LBRACK RBRACK ID ASSIGN expr_rule { AssignBind ($1, $4, $6) }
   | typ_rule ID                                { NoAssignBind ($1, $2)   }
 
 /* formals_opt */

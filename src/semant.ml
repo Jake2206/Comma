@@ -179,7 +179,7 @@ let check (globals, functions) =
 									string_of_expr ex in
 								let get_derived e = let (ty, e') = expr e symbols in ignore(check_assign t ty (err ty e)); (ty, e') in
 								let entries = List.map get_derived a in
-								(t, SArrayLit(t, entries))
+								(Array, SArrayLit(t, entries))
 			| MatrixLit(t, m) ->   let len = List.length (List.hd m) in
 								let err rt ex = "Illegal matrix entry: " ^ 
 									string_of_typ t ^ " = " ^ string_of_typ rt ^ " in " ^ 
