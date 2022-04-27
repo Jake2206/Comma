@@ -20,7 +20,7 @@ RUN apt-get update -yq && \
     ln -s /usr/bin/llc-11 /usr/bin/llc
 
 RUN opam init --auto-setup --yes --disable-sandboxing
-RUN opam install . --deps-only --yes
+RUN opam install ocamlfind ocamlbuild dune llvm.11.0.0 ounit2 ppx_expect odoc --yes
 
 WORKDIR '/home/comma'
 
