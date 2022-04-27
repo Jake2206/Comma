@@ -210,21 +210,21 @@ let%expect_test "func declr w/ func as param" = run_test "def int main() { retur
     return (int : (int : a) * (int : b));
     } |}];;
 
-let%expect_test "int array declaration" = run_test "def int main() { array b = [3, 4] int; }"; 
+let%expect_test "int array declaration" = run_test "def int main() { int array b = [3, 4] int; }"; 
   [%expect {|
     def int main()
     {
     array b = [3, 4] int;
     } |}];;
 
-let%expect_test "1d matrix declaration" = run_test "def int main() { matrix m = |[[3, 4]]| int; }"; 
+let%expect_test "1d matrix declaration" = run_test "def int main() { int matrix m = |[[3, 4]]| int; }"; 
   [%expect {|
     def int main()
     {
     matrix m = |[[3, 4]]| int;
     } |}];;
 
-let%expect_test "2d matrix decl" = run_test "def int main() { matrix x = |[[1.2,2.3],[1.2,1.3]]| double; }"; 
+let%expect_test "2d matrix decl" = run_test "def int main() { double matrix x = |[[1.2,2.3],[1.2,1.3]]| double; }"; 
   [%expect {|
     def int main()
     {
@@ -275,14 +275,14 @@ let%expect_test "if expr w/ illegal semi" =
     |}]
 
 let%expect_test "Bad array entry" = 
-  try run_test "def int main() { array b = [3, 'a'] int; }" with 
+  try run_test "def int main() { int array b = [3, 'a'] int; }" with 
     Failure e -> print_endline e;
   [%expect {|
     Illegal array entry: int = char in 'a'
     |}]
 
 let%expect_test "Assign array to int variable" = 
-  try run_test "def int main() { array b = [3, 4] int; int c = b;}" with 
+  try run_test "def int main() { int array b = [3, 4] int; int c = b;}" with 
     Failure e -> print_endline e;
   [%expect {|
     Illegal bind: mismatched types: expected 'int' got 'array' instead in expr: b

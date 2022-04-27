@@ -86,8 +86,8 @@ typ_rule:
   | BOOL    { Bool   }
   | DOUBLE  { Double }
   | CHAR    { Char   } 
-  | ARRAY   { Array  }
-  | MATRIX  { Matrix }
+  | typ_rule ARRAY  { Array($1)  }
+  | typ_rule MATRIX { Matrix($1) }
   | VOID    { Void   }
 
 stmt_list_rule:
