@@ -15,7 +15,7 @@
 
 *)
 
-(*module L = Llvm
+module L = Llvm
 module A = Ast
 open Sast
 
@@ -191,4 +191,4 @@ let translate (locals, sbody, functions) =  (* NOTE: our sprogram differs from m
   in
 
   List.iter build_function_body functions;
-  the_module*)
+  the_module 
