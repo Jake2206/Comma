@@ -19,16 +19,16 @@ let check (globals, functions) =
 			StringMap.add "print" {
 				rtyp = Void;
 				fname = "print";
-				formals = [NoAssignBind(Array, "char_array")]; 
+				formals = [NoAssignBind(Array Char, "char_array")]; 
 				locals = []; 
 				body = [];
 			} map
 		in 
 		let map = 
 			StringMap.add "parseCSV" {
-				rtyp = Matrix;
+				rtyp = Matrix Char;
 				fname = "parseCSV";
-				formals = [NoAssignBind(Array, "input_filepath")]; 
+				formals = [NoAssignBind(Array Char, "input_filepath")]; 
 				locals = []; 
 				body = [];
 			} map
@@ -37,61 +37,61 @@ let check (globals, functions) =
 			StringMap.add "outputCSV" {
 				rtyp = Void;
 				fname = "outputCSV";
-				formals = [NoAssignBind(Matrix, "matrix"); NoAssignBind(Array, "outputFilepath")];  (* NEEDS TO BE CHANGED TO ARRAY, CHAR ARRAY, OR LIST *)
+				formals = [NoAssignBind(Matrix Char, "matrix"); NoAssignBind(Array Char, "outputFilepath")];  (* NEEDS TO BE CHANGED TO ARRAY, CHAR ARRAY, OR LIST *)
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map =
 			StringMap.add "scalarMulti" {
-				rtyp = Matrix;
+				rtyp = Matrix Double;
 				fname = "scalarMulti";
-				formals = [NoAssignBind(Double, "scalar"); NoAssignBind(Matrix, "base_matrix")];
+				formals = [NoAssignBind(Double, "scalar"); NoAssignBind(Matrix Double, "base_matrix")];
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map = 
 			StringMap.add "scalarDiv" {
-				rtyp = Matrix;
+				rtyp = Matrix Double;
 				fname = "scalarDiv";
-				formals = [NoAssignBind(Double, "scalar"); NoAssignBind(Matrix, "base_matrix")];  
+				formals = [NoAssignBind(Double, "scalar"); NoAssignBind(Matrix Double, "base_matrix")];  
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map =
 			StringMap.add "subtractMatrix" {
-				rtyp = Matrix;
+				rtyp = Matrix Double;
 				fname = "subtractMatrix";
-				formals = [NoAssignBind(Matrix, "base_matrix"); NoAssignBind(Matrix, "sub_matrix")]; 
+				formals = [NoAssignBind(Matrix Double, "base_matrix"); NoAssignBind(Matrix Double, "sub_matrix")]; 
 				locals = []; 
 				body = [];
 			} map
 		in 
 		let map = 
 			StringMap.add "addMatrix" {
-				rtyp = Matrix;
+				rtyp = Matrix Double;
 				fname = "addMatrix";
-				formals = [NoAssignBind(Matrix, "base_matrix"); NoAssignBind(Matrix, "add_matrix")];
+				formals = [NoAssignBind(Matrix Double, "base_matrix"); NoAssignBind(Matrix Double, "add_matrix")];
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map = 
 			StringMap.add "dotProduct" {
-				rtyp = Matrix;
+				rtyp = Matrix Double;
 				fname = "dotProduct";
-				formals = [NoAssignBind(Matrix, "base_matrix"); NoAssignBind(Matrix, "dot_matrix")];
+				formals = [NoAssignBind(Matrix Double, "base_matrix"); NoAssignBind(Matrix Double, "dot_matrix")];
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map =
 			StringMap.add "crossProduct" {
-				rtyp = Matrix;
+				rtyp = Matrix Double;
 				fname = "crossProduct";
-				formals = [NoAssignBind(Array, "base_vector"); NoAssignBind(Array, "cross_vector")];
+				formals = [NoAssignBind(Array Double, "base_vector"); NoAssignBind(Array Double, "cross_vector")];
 				locals = []; 
 				body = [];
 			} map
@@ -100,16 +100,16 @@ let check (globals, functions) =
 			StringMap.add "length" {
 				rtyp = Int;
 				fname = "length";
-				formals = [NoAssignBind(Array, "array")];
+				formals = [NoAssignBind(Array Int, "array")];
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map =
 			StringMap.add "dimension" {
-				rtyp = Array;
+				rtyp = Array Int;
 				fname = "dimension";
-				formals = [NoAssignBind(Matrix, "matrix")];
+				formals = [NoAssignBind(Matrix Int, "matrix")];
 				locals = []; 
 				body = [];
 			} map
@@ -118,7 +118,7 @@ let check (globals, functions) =
 			StringMap.add "retrieveElement" {
 				rtyp = Void;          (* NEED TO FIGURE OUT HOW TO DIFFERENT MATRIX TYPES *)
 				fname = "retrieveElement";
-				formals = [NoAssignBind(Int, "row_index"); NoAssignBind(Int, "column_index"); NoAssignBind(Matrix, "matrix")];
+				formals = [NoAssignBind(Int, "row_index"); NoAssignBind(Int, "column_index"); NoAssignBind(Matrix Int, "matrix")];
 				locals = []; 
 				body = [];
 			} map
@@ -179,7 +179,7 @@ let check (globals, functions) =
 									string_of_expr ex in
 								let get_derived e = let (ty, e') = expr e symbols in ignore(check_assign t ty (err ty e)); (ty, e') in
 								let entries = List.map get_derived a in
-								(Array, SArrayLit(t, entries))
+								(Array t, SArrayLit(t, entries))
 			| MatrixLit(t, m) ->   let len = List.length (List.hd m) in
 								let err rt ex = "Illegal matrix entry: " ^ 
 									string_of_typ t ^ " = " ^ string_of_typ rt ^ " in " ^ 
@@ -189,7 +189,7 @@ let check (globals, functions) =
 													if cur_len = len then List.map get_derived arr else 
 													raise (Failure ("Illegal row length in matrix. Expected length " ^ string_of_int len ^ " got length " ^ string_of_int cur_len)) in
 								let entries = List.map get_single m in
-								(Matrix, SMatrixLit(t, entries))
+								(Matrix t, SMatrixLit(t, entries))
 			| Id l      -> (type_of_identifier l symbols, SId l)
 			| Binop(e1, op, e2) -> 
 					let (lt, e1derived) = expr e1 symbols 
@@ -263,9 +263,12 @@ let check (globals, functions) =
 					if dt == Void then   (* Need to fix if we change type of Nul *)
 						()
 					else
-						raise (Failure ("Illegal bind: mismatched types: expected '" 
-							^ string_of_typ t ^ "' got '" ^ string_of_typ dt 
-							^ "' instead in expr: " ^ string_of_expr e))
+						if string_of_typ t == string_of_typ dt then 
+						() 
+						else 
+							raise (Failure ("Illegal bind: mismatched types: expected '" 
+								^ string_of_typ t ^ "' got '" ^ string_of_typ dt 
+								^ "' instead in expr: " ^ string_of_expr e))
 			| _ -> ()) binds;
 
 		(* Check no two variables have same name within same scope. *)
