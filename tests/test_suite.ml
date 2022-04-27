@@ -14,7 +14,24 @@ let%expect_test "int decl w/ assign" = run_test "def int main() { int b = 3; }";
     int b = 3;
     }
     |}]
+let%expect_test "global int decl w/ assign" = run_test "int a = 5; def int main() { int b = 3; }"; 
+  [%expect {|
+    int a = 5;
 
+    def int main()
+    {
+    int b = 3;
+    }
+    |}];;
+let%expect_test "global bool decl w/ assign" = run_test "bool a = false; def int main() { int b = 3; }"; 
+  [%expect {|
+    bool a = false;
+    
+    def int main()
+    {
+    int b = 3;
+    }
+    |}];;
 let%expect_test "multiply expr in main" = run_test "def int main() { 2*5; }"; 
   [%expect {|
     def int main()
