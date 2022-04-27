@@ -33,10 +33,7 @@ type sfunc_def = {
   sbody: sstmt list;
 }
 
-type sprogram = {
-  slocals: bind list;
-  sfunctions: sfunc_def list;
-}
+type sprogram = bind list * sfunc_def list
 
 (* Pretty-printing functions *)
 
