@@ -11,8 +11,13 @@ doc: "https://url/to/documentation"
 bug-reports: "https://github.com/username/reponame/issues"
 depends: [
   "ocaml"
+  "ocamlfind"
+  "ocamlbuild"
+  "llvm.11.0.0"
   "dune" {>= "3.0"}
   "odoc" {with-doc}
+  "ppx_expect"
+  "ounit2"
 ]
 build: [
   ["dune" "subst"] {dev}
