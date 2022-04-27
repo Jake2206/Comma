@@ -113,7 +113,6 @@ let string_of_fdecl fdecl =
   String.concat "" (List.map string_of_stmt fdecl.body) ^
   "}\n"
 
-let string_of_program (vars, stmts, funcs) =
+let string_of_program (vars, funcs) =
   String.concat "" (List.map string_of_vdecl vars) ^
-  String.concat "" (List.map string_of_stmt stmts) ^
   String.concat "" (List.map string_of_fdecl funcs)
