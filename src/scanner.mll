@@ -25,6 +25,7 @@ rule tokenize = parse
 | '*'      { MULTIPLY }
 | '/'      { DIVIDE }
 | '='      { ASSIGN }
+| '|'      { BAR }
 | "=="     { EQ }
 | "!="     { NEQ }
 | '<'      { LT }
@@ -43,13 +44,13 @@ rule tokenize = parse
 | "int"    { INT }
 | "bool"   { BOOL }
 | "char"   { CHAR }
-| "list"   { LIST } 
 | "array"  { ARRAY }
 | "matrix" { MATRIX }
 | "true"   { BLIT(true)  }
 | "false"  { BLIT(false) }
 | "def"    { FUNC }
 | "nul"    { NUL  }
+| "void"   { VOID }
 | "in"     { IN   }
 | "row"    { ROW  } 
 | "col"    { COL  }
