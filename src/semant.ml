@@ -156,7 +156,6 @@ let check (globals, functions) =
 							match x with
 								AssignBind(t, n, _) -> StringMap.add n t m
 								| NoAssignBind(t, n) -> StringMap.add n t m
-								| FuncCall(f,_) -> StringMap.add f Void m (* This might be an issue *)
 								| FuncArg(f) -> StringMap.add f Void m
 						) StringMap.empty symbol_list
 		in 
@@ -222,7 +221,6 @@ let check (globals, functions) =
 							match bind_arg with
 								AssignBind(_, _, _) -> raise (Failure ("illegal expression in function args"))
 								| NoAssignBind(t, _) -> t
-								| FuncCall(f, _) -> ignore(find_func f); Void
 								(* add higher order func to func list by copying func that it is referencing THIS WILL ONLY ALLOW ONE USE OF THE ARG*)
 								| FuncArg(f) -> let fd2 = (find_func (string_of_expr e))
 												in ignore(
@@ -276,13 +274,10 @@ let check (globals, functions) =
 			match (x, y) with
 				(AssignBind(_,n1,_), AssignBind(_,n2,_)) when n1 = n2 -> true
 				| (AssignBind(_,n1,_), NoAssignBind(_,n2)) when n1 = n2 -> true
-				| (AssignBind(_,_,_), FuncCall(_, _)) -> true
 			    | (NoAssignBind(_,n1), AssignBind(_,n2,_)) when n1 = n2 -> true
 				| (NoAssignBind(_, n1), NoAssignBind(_, n2)) when n1 = n2 -> true
-				| (NoAssignBind(_,_), FuncCall(_, _)) -> true (* This might need updating *)
 				| (FuncCall(_,_), AssignBind(_,_,_)) -> true
 				| (FuncCall(_,_), NoAssignBind(_,_)) -> true
-				| (FuncCall(_,_), FuncCall(_,_)) -> true
 				| (_,_) -> false
 		in 
 		let rec dups = function 
@@ -296,19 +291,12 @@ let check (globals, functions) =
 					match (x, y) with
 						(AssignBind(_,n1,_), AssignBind(_,n2,_))     -> compare n1 n2
 						| (AssignBind(_,n1,_), NoAssignBind(_,n2))   -> compare n1 n2
-						| (AssignBind(_,_,_), FuncCall(_, _))        -> 0
 						| (AssignBind (_, _, _), FuncArg(_))         -> 0
 						| (NoAssignBind(_,n1), AssignBind(_,n2,_))   -> compare n1 n2
 						| (NoAssignBind(_, n1), NoAssignBind(_, n2)) -> compare n1 n2
-						| (NoAssignBind(_,_), FuncCall(_, _))        -> 0
 						| (NoAssignBind (_, _), FuncArg(_))          -> 0
-						| (FuncCall(_,_), AssignBind(_,_,_))         -> 0
-						| (FuncCall(_,_), NoAssignBind(_,_))         -> 0
-						| (FuncCall(_,_), FuncCall(_,_))             -> 0
-						| (FuncCall(_,_), FuncArg(_))                -> 0
 						| (FuncArg(_), NoAssignBind(_,_))            -> 0
 						| (FuncArg(_), AssignBind(_,_,_))            -> 0
-						| (FuncArg(_), FuncCall(_,_))                -> 0
 						| (FuncArg(_), FuncArg(_))                   -> 0
 			) binds
 		in dups (sort_bind_list)

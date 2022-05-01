@@ -20,7 +20,6 @@ type expr =
 type bind = 
   AssignBind of typ * string * expr
   | NoAssignBind of typ * string 
-  | FuncCall of string * expr list
   | FuncArg of string
 
 type stmt =
@@ -86,14 +85,12 @@ let string_of_vdecl bind =
   match bind with 
   AssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_expr e ^ ";\n"
   | NoAssignBind(t, i) -> string_of_typ t ^ " " ^ i ^ ";\n"
-  | FuncCall(f, el) -> f ^ "(" ^ String.concat "" (List.map string_of_expr el) ^ ")" 
   | FuncArg(f) -> f 
   
 let string_of_args bind = 
   match bind with
   AssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_expr e
   | NoAssignBind(t, i) -> string_of_typ t ^ " " ^ i
-  | FuncCall(f, el) -> f ^ "(" ^ String.concat "" (List.map string_of_expr el) ^ ")"
   | FuncArg(f) -> f 
 
 let rec string_of_stmt = function

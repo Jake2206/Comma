@@ -47,6 +47,12 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
     | A.Matrix(t) -> L.pointer_type (ltype_of_typ t)
   in
 
+  let bind_typ = function
+        A.NoAssignBind(t,_) -> ltype_of_typ t
+      | A.AssignBind(t,_,_) -> ltype_of_typ t (*We should maybe throw an error for this match*)
+      | A.FuncArg(f) -> void_t (*We should add this to the functions list*)
+  in
+
   (* Create a map of global variables after creating each *)
   let global_vars : L.llvalue StringMap.t =
     let global_var m (t, n) =
@@ -65,7 +71,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
     let function_decl m fdecl =
       let name = fdecl.sfname
       and formal_types =
-        Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) fdecl.sformals)
+        Array.of_list (List.map bind_typ fdecl.sformals)
       in let ftype = L.function_type (ltype_of_typ fdecl.srtyp) formal_types in
       StringMap.add name (L.define_function name ftype the_module, fdecl) m in
     List.fold_left function_decl StringMap.empty functions in
@@ -80,18 +86,36 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
     (* Construct the function's "locals": formal arguments and locally
        declared variables.  Allocate each on the stack, initialize their
        value, if appropriate, and remember their values in the "locals" map *)
+
+    let get_formal f = function
+        A.NoAssignBind(t,n) -> (t, n)
+      | A.AssignBind(t,n,_) -> (t, n) (*We should maybe throw an error for this match*)
+      | A.FuncArg(f) -> (A.Void, f) (*We should add this to the functions list*)
+    in
+
     let local_vars =
-      let add_formal m (t, n) p =
-        L.set_value_name n p;
-        let local = L.build_alloca (ltype_of_typ t) n builder in
-        ignore (L.build_store p local builder);
-        StringMap.add n local m
+      let add_formal m bind p =
+        match bind with
+          A.NoAssignBind(t,n) -> L.set_value_name n p;
+                                 let local = L.build_alloca (ltype_of_typ t) n builder in
+                                 ignore (L.build_store p local builder);
+                                 StringMap.add n local m
+        | A.AssignBind(t,n,_) -> raise(Failure("Illegal assignment in function arguments"))
+        | A.FuncArg(f) ->        L.set_value_name f p;
+                                 let local = L.build_alloca void_t f builder in
+                                 ignore (L.build_store p local builder);
+                                 StringMap.add f local m
+                                 (*This passes here but it might be the place where we should implement the higher order functions*)
 
       (* Allocate space for any locally declared variables and add the
        * resulting registers to our map *)
-      and add_local m (t, n) =
-        let local_var = L.build_alloca (ltype_of_typ t) n builder
-        in StringMap.add n local_var m
+      and add_local m bind =
+        match bind with
+          A.NoAssignBind(t,n) -> let local_var = L.build_alloca (ltype_of_typ t) n builder
+                                 in StringMap.add n local_var m
+        | A.AssignBind(t,n,_) -> let local_var = L.build_alloca (ltype_of_typ t) n builder
+                                 in StringMap.add n local_var m
+        | A.FuncArg(f) ->        raise(Failure("Illegal function usage"))
       in
 
       let formals = List.fold_left2 add_formal StringMap.empty fdecl.sformals
