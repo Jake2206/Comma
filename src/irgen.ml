@@ -49,13 +49,18 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
 
   let bind_typ = function
         A.NoAssignBind(t,_) -> ltype_of_typ t
-      | A.AssignBind(t,_,_) -> ltype_of_typ t (*We should maybe throw an error for this match*)
+      | A.AssignBind(t,_,_) -> ltype_of_typ t
       | A.FuncArg(f) -> void_t (*We should add this to the functions list*)
   in
 
   (* Create a map of global variables after creating each *)
   let global_vars : L.llvalue StringMap.t =
-    let global_var m (t, n) =
+    let global_var m bind = 
+      let (t, n) = match bind with
+       A.NoAssignBind(ty,na) -> (ty, na)
+      | A.AssignBind(ty,na,_) -> (ty, na)
+      | A.FuncArg(f) -> (A.Void, f) (*We should add this to the functions list*)
+    in 
       let init = L.const_int (ltype_of_typ t) 0
       in StringMap.add n (L.define_global n init the_module) m in
     List.fold_left global_var StringMap.empty globals in
@@ -130,6 +135,25 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
       | SNulLit -> L.const_int i32_t 0 (*Is this correct?*)
       | SCharLit c -> L.const_int i8_t (int_of_char c)
       | SId s       -> L.build_load (lookup s var_map) s builder
+      | SArrayLit(typ, a) -> let t = match typ with (*Referenced MatrixMania project to get an idea on how to implement arrays*)
+                                      A.Int -> i32_t
+                                    | A.Bool -> i1_t
+                                    | A.Double -> double_t
+                                    | A.Char -> i8_t
+                                    | _ -> raise(Failure("Invalid array type")) in 
+                              let build_one e = build_expr builder e var_map in
+                              L.const_array (L.array_type t (List.length a)) (Array.of_list (List.map build_one a))
+      | SMatrixLit(typ, m) -> let t = match typ with (*Referenced MatrixMania project to get an idea on how to implement matrices*)
+                                      A.Int -> i32_t
+                                    | A.Bool -> i1_t
+                                    | A.Double -> double_t
+                                    | A.Char -> i8_t
+                                    | _ -> raise(Failure("Invalid array type")) in 
+                              let build_one e = build_expr builder e var_map in
+                              let rows = List.map (List.map build_one) m in
+                              let array_row = List.map Array.of_list rows in
+                              let array_rows = Array.of_list ((List.map (L.const_array t) array_row)) in
+                              L.const_array (L.array_type t (List.length (List.hd m))) array_rows
       | SAssign (s, e) -> let e' = build_expr builder e var_map in
         ignore(L.build_store e' (lookup s var_map) builder); e'
       | SBinop (e1, op, e2) -> (*WE NEED TO SET UP NON-INT OPERATIONS HERE*)

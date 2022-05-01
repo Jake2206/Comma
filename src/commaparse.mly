@@ -14,7 +14,7 @@ open Helpers
 %token DOUBLE INT BOOL CHAR ARRAY MATRIX NUL
 %token VOID
 %token COMMA LAMBDA
-%token <float> FLIT
+%token <string> FLIT
 %token <int> INTLIT
 %token <char> CHLIT
 %token <bool> BLIT
