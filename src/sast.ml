@@ -8,7 +8,7 @@ and sx =
   | SIntLit of int
   | SBoolLit of bool
   | SCharLit of char
-  | SDoubLit of float
+  | SDoubLit of string
   | SArrayLit of typ * sexpr list
   | SMatrixLit of typ * (sexpr list) list
   | SId of string
@@ -48,7 +48,7 @@ let rec string_of_sexpr (t, e) =
 		SIntLit(l) -> string_of_int l
 	  | SNulLit     -> "nul" 
 	  | SCharLit(c) -> "'" ^ String.make 1 c ^ "'"
-	  | SDoubLit(d) -> string_of_float d
+	  | SDoubLit(d) -> d
 	  | SBoolLit(true) -> "true"
 	  | SBoolLit(false) -> "false"
     | SMatrixLit(t, m) -> "|[" ^ string_of_slist (List.map (fun a -> string_of_slist (List.map string_of_sexpr a)) m) ^ "]| " ^ string_of_typ t

@@ -276,8 +276,8 @@ let check (globals, functions) =
 				| (AssignBind(_,n1,_), NoAssignBind(_,n2)) when n1 = n2 -> true
 			    | (NoAssignBind(_,n1), AssignBind(_,n2,_)) when n1 = n2 -> true
 				| (NoAssignBind(_, n1), NoAssignBind(_, n2)) when n1 = n2 -> true
-				| (FuncCall(_,_), AssignBind(_,_,_)) -> true
-				| (FuncCall(_,_), NoAssignBind(_,_)) -> true
+				| (FuncArg(_), AssignBind(_,_,_)) -> true
+				| (FuncArg(_), NoAssignBind(_,_)) -> true
 				| (_,_) -> false
 		in 
 		let rec dups = function 

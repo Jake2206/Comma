@@ -8,7 +8,7 @@ type expr =
   | IntLit of int
   | BoolLit of bool
   | CharLit of char
-  | DoubLit of float
+  | DoubLit of string
   | ArrayLit of typ * expr list
   | MatrixLit of typ * (expr list) list
   | Id of string
@@ -68,7 +68,7 @@ let rec string_of_expr = function
     IntLit(l) -> string_of_int l
   | NulLit     -> "nul" 
   | CharLit(c) -> "'" ^ String.make 1 c ^ "'"
-  | DoubLit(d) -> string_of_float d
+  | DoubLit(d) -> d
   | BoolLit(true) -> "true"
   | BoolLit(false) -> "false"
   | ArrayLit(t, a) ->  "[" ^ String.concat ", " (List.map string_of_expr a) ^ "] " ^ string_of_typ t
