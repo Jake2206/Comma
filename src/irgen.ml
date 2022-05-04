@@ -50,7 +50,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
   let bind_typ = function
         A.NoAssignBind(t,_) -> ltype_of_typ t
       | A.AssignBind(t,_,_) -> ltype_of_typ t
-      | A.FuncArg(f) -> void_t (*We should add this to the functions list*)
+      | A.FuncArg(_) -> void_t (*We should add this to the functions list ? *)
   in
 
   (* Create a map of global variables after creating each *)
@@ -98,7 +98,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
                                  let local = L.build_alloca (ltype_of_typ t) n builder in
                                  ignore (L.build_store p local builder);
                                  StringMap.add n local m
-        | A.AssignBind(t,n,_) -> raise(Failure("Illegal assignment in function arguments"))
+        | A.AssignBind(_,_,_) -> raise(Failure("Illegal assignment in function arguments"))
         | A.FuncArg(f) ->        L.set_value_name f p;
                                  let local = L.build_alloca void_t f builder in
                                  ignore (L.build_store p local builder);
@@ -113,7 +113,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
                                  in StringMap.add n local_var m
         | A.AssignBind(t,n,_) -> let local_var = L.build_alloca (ltype_of_typ t) n builder
                                  in StringMap.add n local_var m
-        | A.FuncArg(f) ->        raise(Failure("Illegal function usage"))
+        | A.FuncArg(_) ->        raise(Failure("Illegal function usage"))
       in
 
       let formals = List.fold_left2 add_formal StringMap.empty fdecl.sformals
@@ -177,7 +177,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
         L.build_call printf_func [| int_format_str ; (build_expr builder e var_map) |]
           "printf" builder
       | SCall (f, args) ->
-        let (fdef, fdecl) = StringMap.find f function_decls in
+        let (fdef, _) = StringMap.find f function_decls in
         let llargs = List.rev (List.map (fun e -> build_expr builder e var_map) (List.rev args)) in
         let result = f ^ "_result" in
         L.build_call fdef (Array.of_list llargs) result builder
@@ -235,18 +235,8 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
         ignore(L.build_cond_br bool_val body_bb end_bb while_builder);
         L.builder_at_end context end_bb
 
-      | SFor (counter, predicate, increment, body) ->
-        let for_bb = L.append_block context "for" the_function in
-        let build_br_for = L.build_br for_bb in 
-        ignore (build_br_for builder);
-        let for_builder = L.builder_at_end context for_bb in 
-        ignore(build_expr for_builder counter local_vars);
-        let bool_val = build_expr for_builder predicate local_vars in 
-        let body_bb = L.append_block context "for_body" the_function in 
-        add_terminal (build_stmt (L.builder_at_end context body_bb) body) build_br_for;
-        let end_bb = L.append_block context "for_end" the_function in 
-        ignore(L.build_cond_br bool_val body_bb end_bb for_builder);
-        L.builder_at_end context end_bb
+      | SFor (predicate, increment, body) ->
+        build_stmt builder (SBlock [SWhile (predicate, SBlock[body; SExpr increment])])
 
     in
     (* Build the code for each statement in the function *)

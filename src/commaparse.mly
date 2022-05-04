@@ -101,7 +101,7 @@ stmt_rule:
   | IF LPAREN expr_rule RPAREN stmt_rule eif_rule         { If ($3, $5, $6) }  
   | RETURN expr_rule SEMI                                 { Return $2       }
   | WHILE LPAREN expr_rule RPAREN stmt_rule				        { While ($3, $5)  }
-  | FOR LPAREN expr_rule COMMA expr_rule COMMA expr_rule RPAREN stmt_rule { For ($3, $5, $7, $9) }
+  | FOR LPAREN expr_rule COMMA expr_rule RPAREN stmt_rule { For ($3, $5, $7) }
 
 eif_rule:
     EIF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }

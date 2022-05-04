@@ -19,7 +19,7 @@ let check (globals, functions) =
 			StringMap.add "print" {
 				rtyp = Void;
 				fname = "print";
-				formals = [NoAssignBind(Array Char, "char_array")]; 
+				formals = [NoAssignBind(Int, "i")]; 
 				locals = []; 
 				body = [];
 			} map
@@ -229,7 +229,7 @@ let check (globals, functions) =
 							in 
 					   let (et, e') = expr e symbols in
 					   let err = "Illegal argument found " ^ string_of_typ et ^
-								 " expected " ^ string_of_typ bind_typ ^ " in " ^ string_of_expr e
+								 " expected " ^ string_of_typ bind_typ ^ " in " ^ string_of_expr e ^ " in function " ^ fname
 					   in (check_assign bind_typ et err, e')
 				  in
 				  let args' = List.map2 check_call fd.formals args
@@ -327,7 +327,7 @@ let check (globals, functions) =
 		let rec check_stmt = function
 			Expr e -> SExpr (derive_expr_in_context e context)
 			| If(p, b1, b2) -> SIf(check_bool_expr p, check_stmt b1, check_stmt b2)
-			| For(e1, e2, e3, st) -> SFor(derive_expr_in_context e1 context, check_bool_expr e2, derive_expr_in_context e3 context, check_stmt st)
+			| For(e2, e3, st) -> SFor(check_bool_expr e2, derive_expr_in_context e3 context, check_stmt st)
 			| While (p, s) -> SWhile(check_bool_expr p, check_stmt s)
 			| Return e -> let (typder, exprder) = derive_expr_in_context e context in
 				if typder = func.rtyp then SReturn (typder, exprder)

@@ -107,7 +107,7 @@ More importantly, it is the jumping off point to build the IR in the first place
 --BUILDING THE COMPILER--
 Before the IR can be generated, the compiler (namely, "comma") must be built. There's probably a way to do this using Dune which we can deal with not at 5 a.m. -- for now, the way to do it is using
 ```console
-4. ocamlbuild -pkgs llvm comma.native
+4. ocamlbuild -pkgs llvm,llvm.analysis comma.native
 ````
 
 --GENERATING THE LLVM IR--
