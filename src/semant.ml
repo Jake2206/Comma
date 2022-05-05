@@ -158,7 +158,7 @@ let check (globals, functions) =
 								| NoAssignBind(t, n) -> StringMap.add n t m
 								| FuncArg(f) -> StringMap.add f Void m
 						) StringMap.empty symbol_list
-		in 
+		in
 		
 		let type_of_identifier s symbols =
 			try StringMap.find s symbols
