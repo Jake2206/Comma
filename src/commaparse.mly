@@ -151,7 +151,7 @@ expr_rule:
   | expr_rule OR expr_rule        { Binop ($1, Or, $3)    }
   | ID ASSIGN expr_rule           { Assign ($1, $3)       }
   | LPAREN expr_rule RPAREN       { $2                    }
-  | LAMBDA typ_rule ID LBRACE expr_list_rule RBRACE { Lambda($2, $3, $5) }
+  | LAMBDA typ_rule ID LBRACE expr_list_rule RBRACE expr_rule { Lambda($2, $3, $5, $7) }
   | ID LPAREN args_opt RPAREN     { Call ($1, $3)         }
 
 args_opt:

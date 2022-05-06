@@ -4,6 +4,8 @@ int b = 3;
 def int main(){
 	print(mult(a,b));
 	print(add(a,b));
+	b = @int c { c = c*2+a*5 } a+b;
+	print(b);
 	return b;
 }
 

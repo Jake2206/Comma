@@ -23,8 +23,23 @@ entry:
   %a2 = load i32, i32* @a, align 4
   %add_result = call i32 @add(i32 %a2, i32 %b1)
   %printf3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @fmt.2, i32 0, i32 0), i32 %add_result)
-  %b4 = load i32, i32* @b, align 4
-  ret i32 %b4
+  %c = alloca i32, align 4
+  %a4 = load i32, i32* @a, align 4
+  %b5 = load i32, i32* @b, align 4
+  %tmp = add i32 %a4, %b5
+  store i32 %tmp, i32* %c, align 4
+  %c6 = load i32, i32* %c, align 4
+  %tmp7 = mul i32 %c6, 2
+  %a8 = load i32, i32* @a, align 4
+  %tmp9 = mul i32 %a8, 5
+  %tmp10 = add i32 %tmp7, %tmp9
+  store i32 %tmp10, i32* %c, align 4
+  %c11 = load i32, i32* %c, align 4
+  store i32 %c11, i32* @b, align 4
+  %b12 = load i32, i32* @b, align 4
+  %printf13 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @fmt.2, i32 0, i32 0), i32 %b12)
+  %b14 = load i32, i32* @b, align 4
+  ret i32 %b14
 }
 
 define i32 @mult(i32 %a, i32 %b) {

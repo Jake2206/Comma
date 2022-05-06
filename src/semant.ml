@@ -234,11 +234,12 @@ let check (globals, functions) =
 				  in
 				  let args' = List.map2 check_call fd.formals args
 				  in (fd.rtyp, SCall(fname, args'))
-			| Lambda(typ, arg, el) ->
+			| Lambda(typ, arg, el, target) ->
 					let new_symbols = StringMap.add arg typ symbols
 					in let one_ex e = expr e new_symbols
 					in let el' = List.map one_ex el
-					in (typ, SLambda(typ, arg, el'))
+					in let target' = expr target symbols
+					in (typ, SLambda(typ, arg, el', target'))
 		in expr e symbols
 	in
 	

@@ -15,7 +15,7 @@ and sx =
   | SBinop of sexpr * bop * sexpr
   | SAssign of string * sexpr
   | SCall of string * sexpr list
-  | SLambda of typ * string * sexpr list
+  | SLambda of typ * string * sexpr list * sexpr
 
 type sbind =
   | SAssignBind of typ * string * sexpr
@@ -63,7 +63,7 @@ let rec string_of_sexpr (t, e) =
 		string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
 	  | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e
 	  | SCall(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
-    | SLambda(typ, id, e) -> "@ " ^ string_of_typ typ ^ id ^ "{ " ^ String.concat "\n" (List.map string_of_sexpr e) ^ " }"
+    | SLambda(typ, id, e, arg) -> "@ " ^ string_of_typ typ ^ id ^ "{ " ^ String.concat "\n" (List.map string_of_sexpr e) ^ " }" ^ string_of_sexpr arg
 	) ^ ")"
 
 let string_of_svdecl bind = 

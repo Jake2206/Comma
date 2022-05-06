@@ -50,7 +50,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
   let bind_typ = function
         SNoAssignBind(t,_) -> ltype_of_typ t
       | SAssignBind(t,_,_) -> ltype_of_typ t
-      | SFuncArg(_) -> void_t (*We should add this to the functions list ? *)
+      | SFuncArg(_) -> void_t
   in
 
   (* Create a map of global variables after creating each *)
@@ -59,7 +59,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
       let (t, n) = match bind with
        SNoAssignBind(ty,na) -> (ty, na)
       | SAssignBind(ty,na,_) -> (ty, na)
-      | SFuncArg(f) -> (A.Void, f) (*We should add this to the functions list*)
+      | SFuncArg(f) -> (A.Void, f)
     in 
       let init = L.const_int (ltype_of_typ t) 0
       in StringMap.add n (L.define_global n init the_module) m in
@@ -141,9 +141,10 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
       let llargs = List.rev (List.map (fun e -> build_expr builder e var_map int_format_str) (List.rev args)) in
       let result = f ^ "_result" in
       L.build_call fdef (Array.of_list llargs) result builder
-    | SLambda (typ, arg, el) ->
+    | SLambda (typ, arg, el, target) ->
       let new_local = L.build_alloca (ltype_of_typ typ) arg builder in
       let new_vars = StringMap.add arg new_local var_map in 
+      ignore(build_expr builder (typ, (SAssign(arg, target))) new_vars int_format_str);
       ignore(List.map (fun e -> build_expr builder e new_vars int_format_str) el);
       build_expr builder (typ, SId(arg)) new_vars int_format_str
   in
