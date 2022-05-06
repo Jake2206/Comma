@@ -110,11 +110,16 @@ Before the IR can be generated, the compiler (namely, "comma") must be built. Th
 4. ocamlbuild -pkgs llvm,llvm.analysis comma.native
 ````
 
+Run make construct library
+```console
+5. make
+````
+
 --GENERATING THE LLVM IR--
 Once the compiler is built, the LLVM IR can be generated using
 
 ```console
-5. ./comma.native -l infile.test > IRoutfile.out
+6. ./comma.native -l infile.test > IRoutfile.out
 ```
 
 NOTE: the -l flag on the compiler prints to LLVM IR
@@ -124,22 +129,22 @@ Once the IR has been generated to file, it can be run using lli.
 Unfortunately, lli is finicky (which is why getting the right version of llvm is so important). The command to run it is lli-<version>, which will vary depending on the LLVM installation.
 If the installed version of LLVM is 11, for example, the corresponding lli command will be lli-11.
 
-To execute the previously generated IR code, we pass the IR outfile to the correct lli command:
+To execute the previously generated IR code, we pass the IR outfile to the correct lli command. Option '-extra-archive' adds our standard library to the available C functions:
 
 ```console
-6. lli-<version> IRoutfile.out
+7. lli-<version> -extra-archive <pathToLibrary> IRoutfile.out
 ```
 
-7. Docker can be exited through
+8. Docker can be exited through
 ```console
 exit
 ```
-8. Stop docker instances by running:
+9. Stop docker instances by running:
 ``` console
 docker stop $(docker ps -aq)
 ```
 
-9. Terminate docker instances by running:
+10. Terminate docker instances by running:
 ``` console
 docker rm $(docker ps -aq)
 ```

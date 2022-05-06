@@ -19,6 +19,8 @@ module L = Llvm
 module A = Ast
 open Sast
 
+
+
 module StringMap = Map.Make(String)
 
 (* translate : Sast.program -> Llvm.module *)
@@ -65,10 +67,25 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
       in StringMap.add n (L.define_global n init the_module) m in
     List.fold_left global_var StringMap.empty globals in
 
+  (* Declare standard library functions *)
+  (*
   let printf_t : L.lltype =
     L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func : L.llvalue =
     L.declare_function "printf" printf_t the_module in
+  *)
+
+
+  let print_t : L.lltype =
+    L.function_type void_t [| L.pointer_type i8_t |] in 
+  let print_func : L.llvalue = 
+    L.declare_function "print" print_t the_module in 
+
+  let print_hello_t : L.lltype =
+    L.function_type void_t [| |] in
+  let print_hello_func : L.llvalue =
+    L.declare_function "printHello" print_hello_t the_module in 
+
 
   (* Define each function (arguments and return type) so we can
      call it even before we've created its body *)
@@ -87,6 +104,8 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
     let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
+    let chr_format_str = L.build_global_stringptr "%c\n" "chr_fmt" builder in
+    let str_format_str = L.build_global_stringptr "%s\n" "str_fmt" builder in
 
     (* Return the value for a variable or formal argument.
        Check local names first, then global names *)
@@ -140,9 +159,19 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
          | A.LessEqual -> L.build_icmp L.Icmp.Sle
          | A.GreatEqual -> L.build_icmp L.Icmp.Sge
         ) e1' e2' "tmp" builder
-      | SCall ("print", [e]) ->
+      
+       (* Evaluate standard library function calls *) 
+      (*
+      | SCall ("printf", [e]) ->
         L.build_call printf_func [| int_format_str ; (build_expr builder e var_map) |]
           "printf" builder
+      *)
+
+      | SCall ("print", [e]) ->
+        L.build_call print_func [| (build_expr builder e var_map)|] "" builder
+      | SCall ("printHello", []) ->
+        L.build_call print_hello_func [| |] "" builder
+
       | SCall (f, args) ->
         let (fdef, _) = StringMap.find f function_decls in
         let llargs = List.rev (List.map (fun e -> build_expr builder e var_map) (List.rev args)) in

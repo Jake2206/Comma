@@ -19,11 +19,20 @@ let check (globals, functions) =
 			StringMap.add "print" {
 				rtyp = Void;
 				fname = "print";
-				formals = [NoAssignBind(Int, "i")]; 
+                                formals = [NoAssignBind((Array Char, "filepath"))];
 				locals = []; 
 				body = [];
 			} map
-		in 
+		in
+                let map =
+                        StringMap.add "printHello" {
+                                rtyp = Void;
+                                fname = "printHello";
+                                formals = [];
+                                locals = [];
+                                body = [];
+                        } map
+                in 
 		let map = 
 			StringMap.add "parseCSV" {
 				rtyp = Matrix Char;
@@ -37,7 +46,7 @@ let check (globals, functions) =
 			StringMap.add "outputCSV" {
 				rtyp = Void;
 				fname = "outputCSV";
-				formals = [NoAssignBind(Matrix Char, "matrix"); NoAssignBind(Array Char, "outputFilepath")];  (* NEEDS TO BE CHANGED TO ARRAY, CHAR ARRAY, OR LIST *)
+				formals = [NoAssignBind(Matrix Char, "matrix"); NoAssignBind(Array Char, "outputFilepath")];
 				locals = []; 
 				body = [];
 			} map
