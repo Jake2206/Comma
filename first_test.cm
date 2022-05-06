@@ -1,7 +1,13 @@
 int i = 20;
 int b = 9;
 int c = 5;
-int a = b + c;
+
 def int main(){
-	print(a);
+	print(c);
+	c = 5;
+	test();
+}
+
+def int test(){
+	print(c);
 }

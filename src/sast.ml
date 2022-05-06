@@ -17,6 +17,11 @@ and sx =
   | SCall of string * sexpr list
   | SLambda of typ * string * sexpr list
 
+type sbind =
+  | SAssignBind of typ * string * sexpr
+  | SNoAssignBind of typ * string 
+  | SFuncArg of string
+
 type sstmt =
   | SBlock of sstmt list
   | SExpr of sexpr
@@ -28,12 +33,12 @@ type sstmt =
 type sfunc_def = {
   srtyp: typ;
   sfname: string;
-  sformals: bind list;
-  slocals: bind list;
+  sformals: sbind list;
+  slocals: sbind list;
   sbody: sstmt list;
 }
 
-type sprogram = bind list * sfunc_def list
+type sprogram = sbind list * sfunc_def list
 
 (* Pretty-printing functions *)
 
@@ -60,7 +65,19 @@ let rec string_of_sexpr (t, e) =
 	  | SCall(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
     | SLambda(typ, id, e) -> "@ " ^ string_of_typ typ ^ id ^ "{ " ^ String.concat "\n" (List.map string_of_sexpr e) ^ " }"
 	) ^ ")"
-	
+
+let string_of_svdecl bind = 
+  match bind with 
+  SAssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_sexpr e ^ ";\n"
+  | SNoAssignBind(t, i) -> string_of_typ t ^ " " ^ i ^ ";\n"
+  | SFuncArg(f) -> f 
+  
+let string_of_sargs bind = 
+  match bind with
+  SAssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_sexpr e
+  | SNoAssignBind(t, i) -> string_of_typ t ^ " " ^ i
+  | SFuncArg(f) -> f 
+
 let rec string_of_sstmt = function
     SBlock(sstmts) ->
     "{\n" ^ String.concat "" (List.map string_of_sstmt sstmts) ^ "}\n"
@@ -73,13 +90,13 @@ let rec string_of_sstmt = function
 
 let string_of_sfdecl fdecl =
   "def " ^ string_of_typ fdecl.srtyp ^ " " ^ fdecl.sfname ^ "(" ^ String.concat ", " 
-  (List.map (fun x -> string_of_args x) fdecl.sformals) ^ ")\n{\n" ^
-  String.concat "" (List.map string_of_vdecl fdecl.slocals) ^
+  (List.map (fun x -> string_of_sargs x) fdecl.sformals) ^ ")\n{\n" ^
+  String.concat "" (List.map string_of_svdecl fdecl.slocals) ^
   String.concat "" (List.map string_of_sstmt fdecl.sbody) ^
   "}\n"
 
 let string_of_sprogram (binds, fdecls) =
-  String.concat "" (List.map string_of_vdecl binds) ^ "\n" ^
+  String.concat "" (List.map string_of_svdecl binds) ^ "\n" ^
   String.concat "" (List.map string_of_sfdecl fdecls)
   
   

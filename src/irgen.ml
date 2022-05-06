@@ -48,21 +48,28 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
   in
 
   let bind_typ = function
-        A.NoAssignBind(t,_) -> ltype_of_typ t
-      | A.AssignBind(t,_,_) -> ltype_of_typ t
-      | A.FuncArg(_) -> void_t (*We should add this to the functions list ? *)
+        SNoAssignBind(t,_) -> ltype_of_typ t
+      | SAssignBind(t,_,_) -> ltype_of_typ t
+      | SFuncArg(_) -> void_t (*We should add this to the functions list ? *)
   in
 
   (* Create a map of global variables after creating each *)
   let global_vars : L.llvalue StringMap.t =
     let global_var m bind = 
-      let (t, n) = match bind with
-       A.NoAssignBind(ty,na) -> (ty, na)
-      | A.AssignBind(ty,na,_) -> (ty, na)
-      | A.FuncArg(f) -> (A.Void, f) (*We should add this to the functions list*)
+      match bind with
+       SNoAssignBind(t,n) -> let init = match t with
+                               A.Double -> L.const_float double_t 0.0 (*Might need to update this for double precision*)
+                               | _ -> L.const_int (ltype_of_typ t) 0
+                               in StringMap.add n (L.define_global n init the_module) m
+      | SAssignBind(t,n,(_,e)) -> let e' = match e with (*Here we will need to basically recreate build_expr*)
+                                SIntLit i  -> L.const_int i32_t i
+                                | SBoolLit b  -> L.const_int i1_t (if b then 1 else 0)
+                                | SDoubLit d -> L.const_float_of_string double_t d
+                                | SCharLit c -> L.const_int i8_t (int_of_char c)
+                                | _ -> raise(Failure("Illegal global declaration")) 
+                               in StringMap.add n (L.define_global n e' the_module) m
+      | SFuncArg(_) -> raise(Failure("Illegal global declaration"))
     in 
-      let init = L.const_int (ltype_of_typ t) 0
-      in StringMap.add n (L.define_global n init the_module) m in
     List.fold_left global_var StringMap.empty globals in
 
   let printf_t : L.lltype =
@@ -161,26 +168,27 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
     let local_vars =
       let add_formal m bind p =
         match bind with
-          A.NoAssignBind(t,n) -> L.set_value_name n p;
+          SNoAssignBind(t,n) -> L.set_value_name n p;
                                  let local = L.build_alloca (ltype_of_typ t) n builder in
                                  ignore (L.build_store p local builder);
                                  StringMap.add n local m
-        | A.AssignBind(_,_,_) -> raise(Failure("Illegal assignment in function arguments"))
-        | A.FuncArg(f) ->        L.set_value_name f p;
+        | SAssignBind(_,_,_) -> raise(Failure("Illegal assignment in function arguments"))
+        | SFuncArg(f) ->        L.set_value_name f p;
                                  let local = L.build_alloca void_t f builder in
                                  ignore (L.build_store p local builder);
                                  StringMap.add f local m
                                  (*This passes here but it might be the place where we should implement the higher order functions*)
 
       (* Allocate space for any locally declared variables and add the
-       * resulting registers to our map *)
+       * resulting registers to our map. Also, evaluate and add assigned local variables*)
       and add_local m bind =
         match bind with
-          A.NoAssignBind(t,n) -> let local_var = L.build_alloca (ltype_of_typ t) n builder
+          SNoAssignBind(t,n) -> let local_var = L.build_alloca (ltype_of_typ t) n builder
                                  in StringMap.add n local_var m
-        | A.AssignBind(t,n,e) -> let local_var = L.build_alloca (ltype_of_typ t) n builder
-                                 in StringMap.add n local_var m
-        | A.FuncArg(_) ->        raise(Failure("Illegal function usage"))
+        | SAssignBind(t,n,e) -> let local_var = L.build_alloca (ltype_of_typ t) n builder
+                                 in ignore(L.build_store (build_expr builder e m) local_var builder); 
+                                 StringMap.add n local_var m
+        | SFuncArg(_) ->        raise(Failure("Illegal function usage"))
       in
 
       let formals = List.fold_left2 add_formal StringMap.empty fdecl.sformals
@@ -246,6 +254,5 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
     add_terminal func_builder (L.build_ret (L.const_int i32_t 0))
 
   in
-
   List.iter build_function_body functions;
   the_module 

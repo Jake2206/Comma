@@ -291,15 +291,15 @@ let check (globals, functions) =
 					match (x, y) with
 						(AssignBind(_,n1,_), AssignBind(_,n2,_))     -> compare n1 n2
 						| (AssignBind(_,n1,_), NoAssignBind(_,n2))   -> compare n1 n2
-						| (AssignBind (_, _, _), FuncArg(_))         -> 0
+						| (AssignBind (_, n1, _), FuncArg(n2))       -> compare n1 n2
 						| (NoAssignBind(_,n1), AssignBind(_,n2,_))   -> compare n1 n2
 						| (NoAssignBind(_, n1), NoAssignBind(_, n2)) -> compare n1 n2
-						| (NoAssignBind (_, _), FuncArg(_))          -> 0
-						| (FuncArg(_), NoAssignBind(_,_))            -> 0
-						| (FuncArg(_), AssignBind(_,_,_))            -> 0
-						| (FuncArg(_), FuncArg(_))                   -> 0
+						| (NoAssignBind (_, n1), FuncArg(n2))        -> compare n1 n2
+						| (FuncArg(n1), NoAssignBind(_,n2))          -> compare n1 n2
+						| (FuncArg(n1), AssignBind(_,n2,_))          -> compare n1 n2
+						| (FuncArg(n1), FuncArg(n2))                 -> compare n1 n2
 			) binds
-		in dups (sort_bind_list)
+		in dups (sort_bind_list);
 	in 
 	
 	(* Check global variables *)
@@ -313,7 +313,21 @@ let check (globals, functions) =
 	let check_function func =
 		check_binds "formal" func.formals;
 		check_binds "local" func.locals;
-	
+		
+		let store_binds binds = let get_one = function 
+			| AssignBind(t,n,e) -> SAssignBind(t,n,(derive_expr_in_context e binds))
+			| NoAssignBind(t,n) -> SNoAssignBind(t,n)
+			| FuncArg(f)        -> SFuncArg(f)
+			in
+			List.map get_one binds
+		in
+
+		let sformals = store_binds func.formals
+		in
+
+		let slocals =  store_binds func.locals
+		in 
+
 	    let context = ( globals @ func.formals @ func.locals )	
 		in
 		
@@ -350,10 +364,21 @@ let check (globals, functions) =
 	in  {
 		srtyp 		= func.rtyp;
 		sfname		= func.fname;
-		sformals 	= func.formals;
-		slocals		= func.locals;
+		sformals 	= sformals;
+		slocals		= slocals;
 		sbody		= match check_stmt (Block func.body) with
 			SBlock(sl) -> sl
 			| _ -> raise (Failure ("internal error: could not convert block"))
 	} 
-in (globals, (List.map check_function functions))
+in 
+
+let store_binds binds = let get_one = function 
+			| AssignBind(t,n,e) -> SAssignBind(t,n,(derive_expr_in_context e binds))
+			| NoAssignBind(t,n) -> SNoAssignBind(t,n)
+			| FuncArg(f)        -> SFuncArg(f)
+			in
+			List.map get_one binds
+in
+let sglobals = store_binds globals in
+
+(sglobals, (List.map check_function functions))
