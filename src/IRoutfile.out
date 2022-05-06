@@ -1,26 +1,52 @@
 ; ModuleID = 'Comma'
 source_filename = "Comma"
 
-@i = global i32 20
-@b = global i32 9
-@c = global i32 5
+@a = global i32 0
+@b = global i32 0
 @fmt = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
 @fmt.1 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+@fmt.2 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+@fmt.3 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+@fmt.4 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
 
 declare i32 @printf(i8*, ...)
 
 define i32 @main() {
 entry:
-  %c = load i32, i32* @c, align 4
-  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @fmt, i32 0, i32 0), i32 %c)
-  store i32 5, i32* @c, align 4
-  %test_result = call i32 @test()
-  ret i32 0
+  store i32 2, i32* @a, align 4
+  store i32 3, i32* @b, align 4
+  %b = load i32, i32* @b, align 4
+  %a = load i32, i32* @a, align 4
+  %mult_result = call i32 @mult(i32 %a, i32 %b)
+  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @fmt.2, i32 0, i32 0), i32 %mult_result)
+  %b1 = load i32, i32* @b, align 4
+  %a2 = load i32, i32* @a, align 4
+  %add_result = call i32 @add(i32 %a2, i32 %b1)
+  %printf3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @fmt.2, i32 0, i32 0), i32 %add_result)
+  %b4 = load i32, i32* @b, align 4
+  ret i32 %b4
 }
 
-define i32 @test() {
+define i32 @mult(i32 %a, i32 %b) {
 entry:
-  %c = load i32, i32* @c, align 4
-  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @fmt.1, i32 0, i32 0), i32 %c)
-  ret i32 0
+  %a1 = alloca i32, align 4
+  store i32 %a, i32* %a1, align 4
+  %b2 = alloca i32, align 4
+  store i32 %b, i32* %b2, align 4
+  %a3 = load i32, i32* %a1, align 4
+  %b4 = load i32, i32* %b2, align 4
+  %tmp = mul i32 %a3, %b4
+  ret i32 %tmp
+}
+
+define i32 @add(i32 %a, i32 %b) {
+entry:
+  %a1 = alloca i32, align 4
+  store i32 %a, i32* %a1, align 4
+  %b2 = alloca i32, align 4
+  store i32 %b, i32* %b2, align 4
+  %a3 = load i32, i32* %a1, align 4
+  %b4 = load i32, i32* %b2, align 4
+  %tmp = add i32 %a3, %b4
+  ret i32 %tmp
 }

@@ -1,13 +1,17 @@
-int i = 20;
-int b = 9;
-int c = 5;
+int a = 2;
+int b = 3;
 
 def int main(){
-	print(c);
-	c = 5;
-	test();
+	print(mult(a,b));
+	print(add(a,b));
+	return b;
 }
 
-def int test(){
-	print(c);
+def int mult(int a, int b){
+	return a*b;
+}
+
+
+def int add(int a, int b){
+	return a+b;
 }
