@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
@@ -98,12 +99,12 @@ struct Matrix *parseCSV(char *filepath)
     fclose(fp);
 
     // Copy over matrix elements and deallocate malloced elements
-    double **final_elements;
-    final_elements = malloc(rows * sizeof(double *));
+
+    double **final_elements = (double **)malloc(rows * sizeof(double *));
 
     for (int i = 0; i < elements_index; i++)
     {
-        final_elements[i] = malloc(columns * sizeof(double));
+        final_elements[i] = (double *)malloc(columns * sizeof(double));
     }
     for (int row_index = 0; row_index < rows; row_index++)
     {
@@ -143,19 +144,18 @@ double *reallocate_matrix(double *elements, int cur_size, int new_size)
     return buf;
 }
 
+void deallocateMatrix(struct Matrix *matrix)
+{
+    for (int i = 0; i < matrix->rows; ++i)
+        free(matrix->elements[i]);
+
+    // Then free the top-level "array"
+    free(matrix->elements);
+}
+
 /*
 void outputCSV(struct Matrix *matrix, char *filepath) {
 
-}
-
-struct Matrix *subtractMatrix(struct Matrix *base_matrix, struct Matrix *sub_matrix) {
-    return NULL;
-}
-
-
-
-struct Matrix *addMatrix(struct Matrix *base_matrix, struct Matrix *add_matrix) {
-    return NULL;
 }
 
 
@@ -209,24 +209,91 @@ double retrieveElement(int row_index, int column_index, struct Matrix *matrix)
     return matrix->elements[row_index][column_index];
 }
 
+bool isMatrixDimensionError(struct Matrix *base_matrix, struct Matrix *update_matrix)
+{
+    if (base_matrix->columns != update_matrix->columns)
+    {
+        print("Matrix error: add_matrix column length not equal to base_matrix column length");
+        return true;
+    }
+    else if (base_matrix->rows != update_matrix->rows)
+    {
+        print("Matrix error: add_matrix row length not equal to base_matrix row length");
+        return true;
+    }
+    return false;
+}
+
+struct Matrix *subtractMatrix(struct Matrix *base_matrix, struct Matrix *sub_matrix)
+{
+    if (isMatrixDimensionError(base_matrix, sub_matrix))
+    {
+        return base_matrix;
+    }
+    for (int i = 0; i < base_matrix->rows; i++)
+    {
+        for (int j = 0; j < base_matrix->columns; j++)
+        {
+            base_matrix->elements[i][j] -= sub_matrix->elements[i][j];
+        }
+    }
+    return base_matrix;
+}
+
+struct Matrix *addMatrix(struct Matrix *base_matrix, struct Matrix *add_matrix)
+{
+    if (isMatrixDimensionError(base_matrix, add_matrix))
+    {
+        return base_matrix;
+    }
+    for (int i = 0; i < base_matrix->rows; i++)
+    {
+        for (int j = 0; j < base_matrix->columns; j++)
+        {
+            base_matrix->elements[i][j] += add_matrix->elements[i][j];
+        }
+    }
+    return base_matrix;
+}
+
 int main()
 {
     print("Hello world");
 
     struct Matrix *matrix = parseCSV("test.csv");
-    int matrixLength = matrix->columns * matrix->rows;
+    struct Matrix *matrix2 = parseCSV("test2.csv");
+    struct Matrix *matrix3 = parseCSV("test2.csv");
+    // testing retrieve method
     printf("%lf\n", retrieveElement(1, 2, matrix));
     printf("%lf\n", retrieveElement(1, 3, matrix));
     printf("%lf\n", retrieveElement(1, 4, matrix));
+
+    // testing scalar multiplication
     scalarMulti(3.25, matrix);
     printf("----------\n");
     printf("%lf\n", retrieveElement(1, 2, matrix));
     printf("%lf\n", retrieveElement(1, 3, matrix));
     printf("%lf\n", retrieveElement(1, 4, matrix));
+    // testing scalar division
     scalarDiv(3.25, matrix);
     printf("----------\n");
     printf("%lf\n", retrieveElement(1, 2, matrix));
     printf("%lf\n", retrieveElement(1, 3, matrix));
     printf("%lf\n", retrieveElement(1, 4, matrix));
+    printf("----------\n");
+    // Testing adding a matrix
+    struct Matrix *matrixToAdd = parseCSV("test2.csv"); 
+    matrix = addMatrix(matrix, matrixToAdd);
+    printf("%lf\n", retrieveElement(0, 0, matrix));
+    printf("%lf\n", retrieveElement(1, 3, matrix));
+    printf("%lf\n", retrieveElement(1, 4, matrix));
+    printf("----------\n");
+    deallocateMatrix(matrixToAdd);
+    // Testing subtracting a matrix
+    struct Matrix *matrixToSubtract = parseCSV("test2.csv");
+    matrix = subtractMatrix(matrix, matrixToSubtract);
+    printf("%lf\n", retrieveElement(0, 0, matrix));
+    printf("%lf\n", retrieveElement(1, 3, matrix));
+    printf("%lf\n", retrieveElement(1, 4, matrix)); 
     return 0;
 }

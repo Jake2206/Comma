@@ -20,16 +20,17 @@ struct Array
 };
 
 void print(char *str);
-// struct Matrix *parseCSV(char *filepath);
-void parseCSV(char *filepath);
+struct Matrix *parseCSV(char *filepath);
+// void parseCSV(char *filepath);
 double *reallocate_matrix(double *elements, int cur_size, int new_size);
 struct Matrix *scalarMulti(double scalar, struct Matrix *matrix);
 struct Matrix *scalarDiv(double scalar, struct Matrix *matrix);
+struct Matrix *subtractMatrix(struct Matrix *base_matrix, struct Matrix *sub_matrix);
+struct Matrix *addMatrix(struct Matrix *base_matrix, struct Matrix *add_matrix);
 
 /*
 void outputCSV(struct Matrix *matrix, char *filepath);
-struct Matrix *subtractMatrix(struct Matrix *base_matrix, struct Matrix *sub_matrix);
-struct Matrix *addMatrix(struct Matrix *base_matrix, struct Matrix *add_matrix);
+
 struct Matrix *dotProduct(struct Matrix *base_matrix, struct Matrix *dot_matrix);
 struct Matrix *crossProduct(double base_vector[], double cross_vector[]);
 
