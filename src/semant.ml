@@ -156,7 +156,6 @@ let check (globals, functions) =
 							match x with
 								AssignBind(t, n, _) -> StringMap.add n t m
 								| NoAssignBind(t, n) -> StringMap.add n t m
-								| FuncArg(f) -> StringMap.add f Void m
 						) StringMap.empty symbol_list
 		in
 		
@@ -221,11 +220,6 @@ let check (globals, functions) =
 							match bind_arg with
 								AssignBind(_, _, _) -> raise (Failure ("illegal expression in function args"))
 								| NoAssignBind(t, _) -> t
-								(* add higher order func to func list by copying func that it is referencing THIS WILL ONLY ALLOW ONE USE OF THE ARG*)
-								| FuncArg(f) -> let fd2 = (find_func (string_of_expr e))
-												in ignore(
-													func_decls := add_func !func_decls {rtyp=fd2.rtyp; fname=f; formals=fd2.formals; locals=fd2.locals; body=fd2.body} 
-												);fd2.rtyp
 							in 
 					   let (et, e') = expr e symbols in
 					   let err = "Illegal argument found " ^ string_of_typ et ^
@@ -277,8 +271,6 @@ let check (globals, functions) =
 				| (AssignBind(_,n1,_), NoAssignBind(_,n2)) when n1 = n2 -> true
 			    | (NoAssignBind(_,n1), AssignBind(_,n2,_)) when n1 = n2 -> true
 				| (NoAssignBind(_, n1), NoAssignBind(_, n2)) when n1 = n2 -> true
-				| (FuncArg(_), AssignBind(_,_,_)) -> true
-				| (FuncArg(_), NoAssignBind(_,_)) -> true
 				| (_,_) -> false
 		in 
 		let rec dups = function 
@@ -292,13 +284,8 @@ let check (globals, functions) =
 					match (x, y) with
 						(AssignBind(_,n1,_), AssignBind(_,n2,_))     -> compare n1 n2
 						| (AssignBind(_,n1,_), NoAssignBind(_,n2))   -> compare n1 n2
-						| (AssignBind (_, n1, _), FuncArg(n2))       -> compare n1 n2
 						| (NoAssignBind(_,n1), AssignBind(_,n2,_))   -> compare n1 n2
 						| (NoAssignBind(_, n1), NoAssignBind(_, n2)) -> compare n1 n2
-						| (NoAssignBind (_, n1), FuncArg(n2))        -> compare n1 n2
-						| (FuncArg(n1), NoAssignBind(_,n2))          -> compare n1 n2
-						| (FuncArg(n1), AssignBind(_,n2,_))          -> compare n1 n2
-						| (FuncArg(n1), FuncArg(n2))                 -> compare n1 n2
 			) binds
 		in dups (sort_bind_list);
 	in 
@@ -318,7 +305,6 @@ let check (globals, functions) =
 		let store_binds binds = let get_one = function 
 			| AssignBind(t,n,e) -> SAssignBind(t,n,(derive_expr_in_context e binds))
 			| NoAssignBind(t,n) -> SNoAssignBind(t,n)
-			| FuncArg(f)        -> SFuncArg(f)
 			in
 			List.map get_one binds
 		in
@@ -376,7 +362,6 @@ in
 let store_binds binds = let get_one = function 
 			| AssignBind(t,n,e) -> SAssignBind(t,n,(derive_expr_in_context e binds))
 			| NoAssignBind(t,n) -> SNoAssignBind(t,n)
-			| FuncArg(f)        -> SFuncArg(f)
 			in
 			List.map get_one binds
 in

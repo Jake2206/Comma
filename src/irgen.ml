@@ -51,7 +51,6 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
   let bind_typ = function
         SNoAssignBind(t,_) -> ltype_of_typ t
       | SAssignBind(t,_,_) -> ltype_of_typ t
-      | SFuncArg(_) -> void_t
   in
 
   (* Create a map of global variables after creating each *)
@@ -60,7 +59,6 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
       let (t, n) = match bind with
        SNoAssignBind(ty,na) -> (ty, na)
       | SAssignBind(ty,na,_) -> (ty, na)
-      | SFuncArg(f) -> (A.Void, f)
     in 
       let init = L.const_int (ltype_of_typ t) 0
       in StringMap.add n (L.define_global n init the_module) m in
@@ -84,7 +82,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
 
   (* Return the value for a variable or formal argument.
      Check local names first, then global names *)
-  let lookup n var_map= try StringMap.find n var_map;
+  let lookup n var_map = try StringMap.find n var_map;
     with Not_found -> StringMap.find n global_vars
   in
 
@@ -192,11 +190,10 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
                                 let temp_int_format_str = L.build_global_stringptr "%d\n" "fmt" temp_builder in
                                 let e' = build_expr temp_builder e global_vars temp_int_format_str in
                                 ignore(L.build_store e' (lookup n m) temp_builder); m
-        | SFuncArg(_) ->        m
   in
   ignore(List.fold_left assign_global global_vars globals);
 
-(* An attempt at adding functions to global variables to make them viable ids in function calls
+(* An attempt at adding functions to global variables to make them viable ids in function calls 
   let global_vars = 
     let func_ref map f = 
           let name = f.sfname in
@@ -222,11 +219,6 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
                                  ignore (L.build_store p local builder);
                                  StringMap.add n local m
         | SAssignBind(_,_,_) -> raise(Failure("Illegal assignment in function arguments"))
-        | SFuncArg(f) ->        L.set_value_name f p;
-                                 let local = L.build_alloca void_t f builder in
-                                 ignore (L.build_store p local builder);
-                                 StringMap.add f local m
-                                 (*This passes here but it might be the place where we should implement the higher order functions*)
 
       (* Allocate space for any locally declared variables and add the
        * resulting registers to our map. Also, evaluate and add assigned local variables*)
@@ -237,7 +229,6 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
         | SAssignBind(t,n,e) -> let local_var = L.build_alloca (ltype_of_typ t) n builder
                                  in ignore(L.build_store (build_expr builder e m int_format_str) local_var builder); 
                                  StringMap.add n local_var m
-        | SFuncArg(_) ->        raise(Failure("Illegal function usage"))
       in
 
       let formals = List.fold_left2 add_formal StringMap.empty fdecl.sformals

@@ -62,7 +62,6 @@ formals_opt:
 
 formals_rule:
   | typ_rule ID { NoAssignBind($1, $2) }
-  | ID { FuncArg($1) }
 
 formals_list:
   formals_rule { [$1] }

@@ -7,21 +7,9 @@ declare i32 @printf(i8*, ...)
 
 define i32 @main() {
 entry:
-  %x = alloca double*, align 8
-  %0 = trunc i64 2 to i32
-  %mallocsize = mul i32 %0, ptrtoint (double* getelementptr (double, double* null, i32 1) to i32)
-  %malloccall = tail call i8* @malloc(i32 %mallocsize)
-  %1 = bitcast i8* %malloccall to double*
-  %2 = getelementptr double, double* %1, i32 0
-  store double 1.200000e+00, double* %2, align 8
-  %3 = getelementptr double, double* %1, i32 1
-  store double 2.300000e+00, double* %3, align 8
-  %4 = getelementptr double, double* %1, i32 0
-  store double 1.200000e+00, double* %4, align 8
-  %5 = getelementptr double, double* %1, i32 1
-  store double 1.300000e+00, double* %5, align 8
-  store double* %1, double** %x, align 8
+  %a = alloca i32, align 4
+  store i32 3, i32* %a, align 4
+  %a1 = load i32, i32* %a, align 4
+  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @fmt, i32 0, i32 0), i32 %a1)
   ret i32 0
 }
-
-declare noalias i8* @malloc(i32)

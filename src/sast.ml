@@ -20,7 +20,6 @@ and sx =
 type sbind =
   | SAssignBind of typ * string * sexpr
   | SNoAssignBind of typ * string 
-  | SFuncArg of string
 
 type sstmt =
   | SBlock of sstmt list
@@ -70,13 +69,11 @@ let string_of_svdecl bind =
   match bind with 
   SAssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_sexpr e ^ ";\n"
   | SNoAssignBind(t, i) -> string_of_typ t ^ " " ^ i ^ ";\n"
-  | SFuncArg(f) -> f 
   
 let string_of_sargs bind = 
   match bind with
   SAssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_sexpr e
   | SNoAssignBind(t, i) -> string_of_typ t ^ " " ^ i
-  | SFuncArg(f) -> f 
 
 let rec string_of_sstmt = function
     SBlock(sstmts) ->
