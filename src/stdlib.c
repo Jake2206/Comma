@@ -120,12 +120,12 @@ struct Matrix *parseCSV(char *filepath)
     matrix->rows = rows;
     matrix->columns = columns;
     matrix->elements = final_elements;
-    // First free all the "sub-arrays"
+    /* // First free all the "sub-arrays"
     for (int i = 0; i < matrix->rows; ++i)
         free(matrix->elements[i]);
 
     // Then free the top-level "array"
-    free(matrix->elements);
+    free(matrix->elements); */
     return matrix;
 }
 
@@ -147,16 +147,6 @@ double *reallocate_matrix(double *elements, int cur_size, int new_size)
 void outputCSV(struct Matrix *matrix, char *filepath) {
 
 }
-
-struct Matrix *scalarMulti(double scalar, struct Matrix *matrix) {
-    return NULL;
-}
-
-
-struct Matrix *scalarDiv(double scalar, struct Matrix *matrix) {
-    return NULL;
-}
-
 
 struct Matrix *subtractMatrix(struct Matrix *base_matrix, struct Matrix *sub_matrix) {
     return NULL;
@@ -180,6 +170,30 @@ struct Matrix *crossProduct(double base_vector[], double cross_vector[]) {
 
 */
 
+struct Matrix *scalarMulti(double scalar, struct Matrix *matrix)
+{
+    for (int i = 0; i < matrix->rows; i++)
+    {
+        for (int j = 0; j < matrix->columns; j++)
+        {
+            matrix->elements[i][j] *= scalar;
+        }
+    }
+    return matrix;
+}
+
+struct Matrix *scalarDiv(double scalar, struct Matrix *matrix)
+{
+    for (int i = 0; i < matrix->rows; i++)
+    {
+        for (int j = 0; j < matrix->columns; j++)
+        {
+            matrix->elements[i][j] /= scalar;
+        }
+    }
+    return matrix;
+}
+
 double retrieveElement(int row_index, int column_index, struct Matrix *matrix)
 {
     if (column_index >= matrix->columns || column_index < 0)
@@ -201,7 +215,18 @@ int main()
 
     struct Matrix *matrix = parseCSV("test.csv");
     int matrixLength = matrix->columns * matrix->rows;
-
-    printf("%lf\n", retrieveElement(1, 5, matrix));
+    printf("%lf\n", retrieveElement(1, 2, matrix));
+    printf("%lf\n", retrieveElement(1, 3, matrix));
+    printf("%lf\n", retrieveElement(1, 4, matrix));
+    scalarMulti(3.25, matrix);
+    printf("----------\n");
+    printf("%lf\n", retrieveElement(1, 2, matrix));
+    printf("%lf\n", retrieveElement(1, 3, matrix));
+    printf("%lf\n", retrieveElement(1, 4, matrix));
+    scalarDiv(3.25, matrix);
+    printf("----------\n");
+    printf("%lf\n", retrieveElement(1, 2, matrix));
+    printf("%lf\n", retrieveElement(1, 3, matrix));
+    printf("%lf\n", retrieveElement(1, 4, matrix));
     return 0;
 }
