@@ -34,17 +34,18 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
   and i8_t       = L.i8_type     context
   and i1_t       = L.i1_type     context 
   and double_t   = L.double_type context
-  and void_t     = L.void_type   context in
+  and void_t     = L.void_type   context 
+  and i64_t      = L.i64_type    context in
 
   (* Return the LLVM type for a MicroC type *)
   let rec ltype_of_typ = function
-      A.Int   -> i32_t
-    | A.Bool  -> i1_t
-    | A.Double -> double_t
-    | A.Char -> i8_t
-    | A.Void -> void_t
-    | A.Array(t) -> L.pointer_type (ltype_of_typ t)
-    | A.Matrix(t) -> L.pointer_type (ltype_of_typ t)
+      A.Int       -> i32_t
+    | A.Bool      -> i1_t
+    | A.Double    -> double_t
+    | A.Char      -> i8_t
+    | A.Void      -> void_t
+    | A.Array(t)  -> L.pointer_type (ltype_of_typ t)
+    | A.Matrix -> L.pointer_type double_t
   in
 
   let bind_typ = function
@@ -95,30 +96,64 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
     | SNulLit -> L.const_int i32_t 0 (*Is this correct?*)
     | SCharLit c -> L.const_int i8_t (int_of_char c)
     | SId s       -> L.build_load (lookup s var_map) s builder
-    | SArrayLit(typ, a) -> let t = match typ with (*Referenced MatrixMania project to get an idea on how to implement arrays*)
-                                    A.Int -> i32_t
-                                  | A.Bool -> i1_t
-                                  | A.Double -> double_t
-                                  | A.Char -> i8_t
-                                  | _ -> raise(Failure("Invalid array type")) in 
-                            let build_one e = build_expr builder e var_map int_format_str in
-                            L.const_array (L.array_type t (List.length a)) (Array.of_list (List.map build_one a))
-    | SMatrixLit(typ, m) -> let t = match typ with (*Referenced MatrixMania project to get an idea on how to implement matrices*)
-                                    A.Int -> i32_t
-                                  | A.Bool -> i1_t
-                                  | A.Double -> double_t
-                                  | A.Char -> i8_t
-                                  | _ -> raise(Failure("Invalid array type")) in 
-                            let build_one e = build_expr builder e var_map int_format_str in
-                            let rows = List.map (List.map build_one) m in
-                            let array_row = List.map Array.of_list rows in
-                            let array_rows = Array.of_list ((List.map (L.const_array t) array_row)) in
-                            L.const_array (L.array_type t (List.length (List.hd m))) array_rows
+    | SArrayLit(typ, a) -> let ret = match typ with (*Referenced SCIC project to get an idea on how to implement arrays*)
+                              A.Int | A.Bool | A.Char -> let t = ltype_of_typ typ in
+                                let build_one e = build_expr builder e var_map int_format_str in
+                                let arr = List.map build_one a in
+                                let n = List.length a in
+                                let ptr = L.build_array_malloc t (L.const_int t n) "" builder  in
+                                ignore (List.fold_left (fun i elem ->
+                                        let idx = L.const_int i32_t i in
+                                        let eptr = L.build_gep ptr [|idx|] "" builder in
+                                        let cptr = L.build_pointercast eptr 
+                                            (L.pointer_type (L.type_of elem)) "" builder in
+                                        let _ = (L.build_store elem cptr builder) in i + 1) 0 arr); ptr
+                              | A.Double -> let t = ltype_of_typ typ in 
+                                let build_one e = build_expr builder e var_map int_format_str in
+                                let arr = List.map build_one a in
+                                let n = List.length a in
+                                let ptr = L.build_array_malloc t (L.const_int i64_t n) "" builder  in
+                                ignore (List.fold_left (fun i elem ->
+                                        let idx = L.const_int i32_t i in
+                                        let eptr = L.build_gep ptr [|idx|] "" builder in
+                                        let cptr = L.build_pointercast eptr 
+                                            (L.pointer_type (L.type_of elem)) "" builder in
+                                        let _ = (L.build_store elem cptr builder) in i + 1) 0 arr); ptr
+                              | _ -> raise(Failure("Invalid array type"))
+                            in ret
+    | SMatrixLit(m) ->  let build_one e = build_expr builder e var_map int_format_str in
+                        let rows = List.map (List.map build_one) m in
+                        let n = List.length m in
+                        let ptr = L.build_array_malloc double_t (L.const_int i64_t n) "" builder  in
+                        ignore (List.map (fun ls -> List.fold_left (fun i elem ->
+                                let idx = L.const_int i32_t i in
+                                let eptr = L.build_gep ptr [|idx|] "" builder in
+                                let cptr = L.build_pointercast eptr 
+                                    (L.pointer_type (L.type_of elem)) "" builder in
+                                let _ = (L.build_store elem cptr builder) in i + 1) 0 ls) rows); ptr
+
     | SAssign(s, e) -> let e' = build_expr builder e var_map int_format_str in
       ignore(L.build_store e' (lookup s var_map) builder); e'
-    | SBinop (e1, op, e2) -> (*WE NEED TO SET UP NON-INT OPERATIONS HERE*)
-      let e1' = build_expr builder e1 var_map int_format_str
-      and e2' = build_expr builder e2 var_map int_format_str in
+    | SBinop ((t1, e1), op, (t2, e2)) when t1 == A.Double -> (*WE NEED TO SET UP NON-INT OPERATIONS HERE*)
+      let e1' = build_expr builder (t1, e1) var_map int_format_str
+      and e2' = build_expr builder (t1, e2) var_map int_format_str in
+      (match op with
+         A.Add     -> L.build_fadd
+       | A.Sub     -> L.build_fsub
+       | A.And     -> L.build_and
+       | A.Or      -> L.build_or
+       | A.Equal   -> L.build_fcmp L.Fcmp.Oeq
+       | A.Neq     -> L.build_fcmp L.Fcmp.One
+       | A.Less    -> L.build_fcmp L.Fcmp.Olt
+       | A.Multiply -> L.build_fmul
+       | A.Divide  -> L.build_fdiv
+       | A.Great   -> L.build_fcmp L.Fcmp.Ogt
+       | A.LessEqual -> L.build_fcmp L.Fcmp.Ole
+       | A.GreatEqual -> L.build_fcmp L.Fcmp.Oge
+      ) e1' e2' "tmp" builder
+    | SBinop ((t1, e1), op, (t2, e2)) -> (*WE NEED TO SET UP NON-INT OPERATIONS HERE*)
+      let e1' = build_expr builder (t1, e1) var_map int_format_str
+      and e2' = build_expr builder (t1, e2) var_map int_format_str in
       (match op with
          A.Add     -> L.build_add
        | A.Sub     -> L.build_sub
@@ -128,7 +163,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
        | A.Neq     -> L.build_icmp L.Icmp.Ne
        | A.Less    -> L.build_icmp L.Icmp.Slt
        | A.Multiply -> L.build_mul
-       | A.Divide  -> L.build_fdiv
+       | A.Divide  -> L.build_sdiv
        | A.Great   -> L.build_icmp L.Icmp.Sgt
        | A.LessEqual -> L.build_icmp L.Icmp.Sle
        | A.GreatEqual -> L.build_icmp L.Icmp.Sge

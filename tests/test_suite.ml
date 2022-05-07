@@ -249,7 +249,7 @@ let%expect_test "2d matrix decl" = run_test "def int main() { double matrix x = 
     }
   |}];;
 
-let%expect_test "lambda func decl in main" = run_test "def int main() { int a = 1; int b=1; b = @int c { c = c*2+a*5 }; b = b+a; }";
+let%expect_test "lambda func decl in main" = run_test "def int main() { int a = 1; int b=1; b = (@int c { c = c*2+a*5 } b); }";
   [%expect {|
   def int main()
   {

@@ -26,7 +26,7 @@ let check (globals, functions) =
 		in 
 		let map = 
 			StringMap.add "parseCSV" {
-				rtyp = Matrix Char;
+				rtyp = Matrix;
 				fname = "parseCSV";
 				formals = [NoAssignBind(Array Char, "input_filepath")]; 
 				locals = []; 
@@ -37,59 +37,59 @@ let check (globals, functions) =
 			StringMap.add "outputCSV" {
 				rtyp = Void;
 				fname = "outputCSV";
-				formals = [NoAssignBind(Matrix Char, "matrix"); NoAssignBind(Array Char, "outputFilepath")];  (* NEEDS TO BE CHANGED TO ARRAY, CHAR ARRAY, OR LIST *)
+				formals = [NoAssignBind(Matrix, "matrix"); NoAssignBind(Array Char, "outputFilepath")];  (* NEEDS TO BE CHANGED TO ARRAY, CHAR ARRAY, OR LIST *)
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map =
 			StringMap.add "scalarMulti" {
-				rtyp = Matrix Double;
+				rtyp = Matrix;
 				fname = "scalarMulti";
-				formals = [NoAssignBind(Double, "scalar"); NoAssignBind(Matrix Double, "base_matrix")];
+				formals = [NoAssignBind(Double, "scalar"); NoAssignBind(Matrix, "base_matrix")];
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map = 
 			StringMap.add "scalarDiv" {
-				rtyp = Matrix Double;
+				rtyp = Matrix;
 				fname = "scalarDiv";
-				formals = [NoAssignBind(Double, "scalar"); NoAssignBind(Matrix Double, "base_matrix")];  
+				formals = [NoAssignBind(Double, "scalar"); NoAssignBind(Matrix, "base_matrix")];  
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map =
 			StringMap.add "subtractMatrix" {
-				rtyp = Matrix Double;
+				rtyp = Matrix;
 				fname = "subtractMatrix";
-				formals = [NoAssignBind(Matrix Double, "base_matrix"); NoAssignBind(Matrix Double, "sub_matrix")]; 
+				formals = [NoAssignBind(Matrix, "base_matrix"); NoAssignBind(Matrix, "sub_matrix")]; 
 				locals = []; 
 				body = [];
 			} map
 		in 
 		let map = 
 			StringMap.add "addMatrix" {
-				rtyp = Matrix Double;
+				rtyp = Matrix;
 				fname = "addMatrix";
-				formals = [NoAssignBind(Matrix Double, "base_matrix"); NoAssignBind(Matrix Double, "add_matrix")];
+				formals = [NoAssignBind(Matrix, "base_matrix"); NoAssignBind(Matrix, "add_matrix")];
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map = 
 			StringMap.add "dotProduct" {
-				rtyp = Matrix Double;
+				rtyp = Matrix;
 				fname = "dotProduct";
-				formals = [NoAssignBind(Matrix Double, "base_matrix"); NoAssignBind(Matrix Double, "dot_matrix")];
+				formals = [NoAssignBind(Matrix, "base_matrix"); NoAssignBind(Matrix, "dot_matrix")];
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map =
 			StringMap.add "crossProduct" {
-				rtyp = Matrix Double;
+				rtyp = Matrix;
 				fname = "crossProduct";
 				formals = [NoAssignBind(Array Double, "base_vector"); NoAssignBind(Array Double, "cross_vector")];
 				locals = []; 
@@ -109,7 +109,7 @@ let check (globals, functions) =
 			StringMap.add "dimension" {
 				rtyp = Array Int;
 				fname = "dimension";
-				formals = [NoAssignBind(Matrix Int, "matrix")];
+				formals = [NoAssignBind(Matrix, "matrix")];
 				locals = []; 
 				body = [];
 			} map
@@ -118,7 +118,7 @@ let check (globals, functions) =
 			StringMap.add "retrieveElement" {
 				rtyp = Void;          (* NEED TO FIGURE OUT HOW TO DIFFERENT MATRIX TYPES *)
 				fname = "retrieveElement";
-				formals = [NoAssignBind(Int, "row_index"); NoAssignBind(Int, "column_index"); NoAssignBind(Matrix Int, "matrix")];
+				formals = [NoAssignBind(Int, "row_index"); NoAssignBind(Int, "column_index"); NoAssignBind(Matrix, "matrix")];
 				locals = []; 
 				body = [];
 			} map
@@ -179,16 +179,16 @@ let check (globals, functions) =
 								let get_derived e = let (ty, e') = expr e symbols in ignore(check_assign t ty (err ty e)); (ty, e') in
 								let entries = List.map get_derived a in
 								(Array t, SArrayLit(t, entries))
-			| MatrixLit(t, m) ->   let len = List.length (List.hd m) in
+			| MatrixLit(m) ->   let len = List.length (List.hd m) in
 								let err rt ex = "Illegal matrix entry: " ^ 
-									string_of_typ t ^ " = " ^ string_of_typ rt ^ " in " ^ 
+									"expected double but found " ^ string_of_typ rt ^ " in " ^ 
 									string_of_expr ex in
-								let get_derived e = let (ty, e') = expr e symbols in ignore(check_assign t ty (err ty e)); (ty, e') in
+								let get_derived e = let (ty, e') = expr e symbols in ignore(check_assign Double ty (err ty e)); (ty, e') in
 								let get_single arr = let cur_len = List.length arr in
 													if cur_len = len then List.map get_derived arr else 
 													raise (Failure ("Illegal row length in matrix. Expected length " ^ string_of_int len ^ " got length " ^ string_of_int cur_len)) in
 								let entries = List.map get_single m in
-								(Matrix t, SMatrixLit(t, entries))
+								(Matrix, SMatrixLit(entries))
 			| Id l      -> (type_of_identifier l symbols, SId l)
 			| Binop(e1, op, e2) -> 
 					let (lt, e1derived) = expr e1 symbols 

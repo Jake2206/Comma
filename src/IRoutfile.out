@@ -1,67 +1,27 @@
 ; ModuleID = 'Comma'
 source_filename = "Comma"
 
-@a = global i32 0
-@b = global i32 0
 @fmt = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@fmt.1 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@fmt.2 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@fmt.3 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@fmt.4 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
 
 declare i32 @printf(i8*, ...)
 
 define i32 @main() {
 entry:
-  store i32 2, i32* @a, align 4
-  store i32 3, i32* @b, align 4
-  %b = load i32, i32* @b, align 4
-  %a = load i32, i32* @a, align 4
-  %mult_result = call i32 @mult(i32 %a, i32 %b)
-  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @fmt.2, i32 0, i32 0), i32 %mult_result)
-  %b1 = load i32, i32* @b, align 4
-  %a2 = load i32, i32* @a, align 4
-  %add_result = call i32 @add(i32 %a2, i32 %b1)
-  %printf3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @fmt.2, i32 0, i32 0), i32 %add_result)
-  %c = alloca i32, align 4
-  %a4 = load i32, i32* @a, align 4
-  %b5 = load i32, i32* @b, align 4
-  %tmp = add i32 %a4, %b5
-  store i32 %tmp, i32* %c, align 4
-  %c6 = load i32, i32* %c, align 4
-  %tmp7 = mul i32 %c6, 2
-  %a8 = load i32, i32* @a, align 4
-  %tmp9 = mul i32 %a8, 5
-  %tmp10 = add i32 %tmp7, %tmp9
-  store i32 %tmp10, i32* %c, align 4
-  %c11 = load i32, i32* %c, align 4
-  store i32 %c11, i32* @b, align 4
-  %b12 = load i32, i32* @b, align 4
-  %printf13 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @fmt.2, i32 0, i32 0), i32 %b12)
-  %b14 = load i32, i32* @b, align 4
-  ret i32 %b14
+  %x = alloca double*, align 8
+  %0 = trunc i64 2 to i32
+  %mallocsize = mul i32 %0, ptrtoint (double* getelementptr (double, double* null, i32 1) to i32)
+  %malloccall = tail call i8* @malloc(i32 %mallocsize)
+  %1 = bitcast i8* %malloccall to double*
+  %2 = getelementptr double, double* %1, i32 0
+  store double 1.200000e+00, double* %2, align 8
+  %3 = getelementptr double, double* %1, i32 1
+  store double 2.300000e+00, double* %3, align 8
+  %4 = getelementptr double, double* %1, i32 0
+  store double 1.200000e+00, double* %4, align 8
+  %5 = getelementptr double, double* %1, i32 1
+  store double 1.300000e+00, double* %5, align 8
+  store double* %1, double** %x, align 8
+  ret i32 0
 }
 
-define i32 @mult(i32 %a, i32 %b) {
-entry:
-  %a1 = alloca i32, align 4
-  store i32 %a, i32* %a1, align 4
-  %b2 = alloca i32, align 4
-  store i32 %b, i32* %b2, align 4
-  %a3 = load i32, i32* %a1, align 4
-  %b4 = load i32, i32* %b2, align 4
-  %tmp = mul i32 %a3, %b4
-  ret i32 %tmp
-}
-
-define i32 @add(i32 %a, i32 %b) {
-entry:
-  %a1 = alloca i32, align 4
-  store i32 %a, i32* %a1, align 4
-  %b2 = alloca i32, align 4
-  store i32 %b, i32* %b2, align 4
-  %a3 = load i32, i32* %a1, align 4
-  %b4 = load i32, i32* %b2, align 4
-  %tmp = add i32 %a3, %b4
-  ret i32 %tmp
-}
+declare noalias i8* @malloc(i32)
