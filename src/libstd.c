@@ -161,8 +161,6 @@ double *reallocate_matrix(double *elements, int cur_size, int new_size) {
 }
 
 
-
-
 /*
 void outputCSV(struct Matrix *matrix, char *filepath) {
    
