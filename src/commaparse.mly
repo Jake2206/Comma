@@ -62,7 +62,6 @@ formals_opt:
 
 formals_rule:
   | typ_rule ID { NoAssignBind($1, $2) }
-  | ID { FuncArg($1) }
 
 formals_list:
   formals_rule { [$1] }
@@ -86,7 +85,7 @@ typ_rule:
   | DOUBLE  { Double }
   | CHAR    { Char   } 
   | typ_rule ARRAY  { Array($1)  }
-  | typ_rule MATRIX { Matrix($1) }
+  | MATRIX  { Matrix }
   | VOID    { Void   }
 
 stmt_list_rule:
@@ -134,9 +133,9 @@ expr_rule:
   | FLIT                          { DoubLit $1            }
   | CHLIT                         { CharLit $1            }
   | ID                            { Id $1                 }
-  | NUL	                          { NulLit 		          } /* source of the shift/reduce conflict */
+  | NUL	                          { NulLit 		            }
   | LBRACK array_decl_rule RBRACK typ_rule { ArrayLit ($4, $2)           }
-  | BAR LBRACK matrix_decl_rule RBRACK BAR typ_rule      { MatrixLit ($6,$3)          }
+  | BAR matrix_decl_rule BAR      { MatrixLit ($2)          }
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
   | expr_rule MULTIPLY expr_rule  { Binop ($1, Multiply, $3)   }
@@ -151,7 +150,7 @@ expr_rule:
   | expr_rule OR expr_rule        { Binop ($1, Or, $3)    }
   | ID ASSIGN expr_rule           { Assign ($1, $3)       }
   | LPAREN expr_rule RPAREN       { $2                    }
-  | LAMBDA typ_rule ID LBRACE expr_list_rule RBRACE { Lambda($2, $3, $5) }
+  | LPAREN LAMBDA typ_rule ID LBRACE expr_list_rule RBRACE expr_rule RPAREN { Lambda($3, $4, $6, $8) }
   | ID LPAREN args_opt RPAREN     { Call ($1, $3)         }
 
 args_opt:

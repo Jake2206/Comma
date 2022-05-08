@@ -1,7 +1,6 @@
-int i = 20;
-int b = 9;
-int c = 5;
-int a = b + c;
 def int main(){
-	print(a);
+	char array b = ['t','e','s','t'] char;
+	char a = 't';
+	print(b);
+	return 0;
 }

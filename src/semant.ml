@@ -19,7 +19,7 @@ let check (globals, functions) =
 			StringMap.add "print" {
 				rtyp = Void;
 				fname = "print";
-                                formals = [NoAssignBind((Array Char, "filepath"))];
+				formals = [NoAssignBind(Array Char, "i")]; 
 				locals = []; 
 				body = [];
 			} map
@@ -35,7 +35,7 @@ let check (globals, functions) =
                 in 
 		let map = 
 			StringMap.add "parseCSV" {
-				rtyp = Matrix Char;
+				rtyp = Matrix;
 				fname = "parseCSV";
 				formals = [NoAssignBind(Array Char, "input_filepath")]; 
 				locals = []; 
@@ -46,59 +46,59 @@ let check (globals, functions) =
 			StringMap.add "outputCSV" {
 				rtyp = Void;
 				fname = "outputCSV";
-				formals = [NoAssignBind(Matrix Char, "matrix"); NoAssignBind(Array Char, "outputFilepath")];
+				formals = [NoAssignBind(Matrix, "matrix"); NoAssignBind(Array Char, "outputFilepath")];  (* NEEDS TO BE CHANGED TO ARRAY, CHAR ARRAY, OR LIST *)
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map =
 			StringMap.add "scalarMulti" {
-				rtyp = Matrix Double;
+				rtyp = Matrix;
 				fname = "scalarMulti";
-				formals = [NoAssignBind(Double, "scalar"); NoAssignBind(Matrix Double, "base_matrix")];
+				formals = [NoAssignBind(Double, "scalar"); NoAssignBind(Matrix, "base_matrix")];
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map = 
 			StringMap.add "scalarDiv" {
-				rtyp = Matrix Double;
+				rtyp = Matrix;
 				fname = "scalarDiv";
-				formals = [NoAssignBind(Double, "scalar"); NoAssignBind(Matrix Double, "base_matrix")];  
+				formals = [NoAssignBind(Double, "scalar"); NoAssignBind(Matrix, "base_matrix")];  
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map =
 			StringMap.add "subtractMatrix" {
-				rtyp = Matrix Double;
+				rtyp = Matrix;
 				fname = "subtractMatrix";
-				formals = [NoAssignBind(Matrix Double, "base_matrix"); NoAssignBind(Matrix Double, "sub_matrix")]; 
+				formals = [NoAssignBind(Matrix, "base_matrix"); NoAssignBind(Matrix, "sub_matrix")]; 
 				locals = []; 
 				body = [];
 			} map
 		in 
 		let map = 
 			StringMap.add "addMatrix" {
-				rtyp = Matrix Double;
+				rtyp = Matrix;
 				fname = "addMatrix";
-				formals = [NoAssignBind(Matrix Double, "base_matrix"); NoAssignBind(Matrix Double, "add_matrix")];
+				formals = [NoAssignBind(Matrix, "base_matrix"); NoAssignBind(Matrix, "add_matrix")];
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map = 
 			StringMap.add "dotProduct" {
-				rtyp = Matrix Double;
+				rtyp = Matrix;
 				fname = "dotProduct";
-				formals = [NoAssignBind(Matrix Double, "base_matrix"); NoAssignBind(Matrix Double, "dot_matrix")];
+				formals = [NoAssignBind(Matrix, "base_matrix"); NoAssignBind(Matrix, "dot_matrix")];
 				locals = []; 
 				body = [];
 			} map
 		in
 		let map =
 			StringMap.add "crossProduct" {
-				rtyp = Matrix Double;
+				rtyp = Matrix;
 				fname = "crossProduct";
 				formals = [NoAssignBind(Array Double, "base_vector"); NoAssignBind(Array Double, "cross_vector")];
 				locals = []; 
@@ -118,7 +118,7 @@ let check (globals, functions) =
 			StringMap.add "dimension" {
 				rtyp = Array Int;
 				fname = "dimension";
-				formals = [NoAssignBind(Matrix Int, "matrix")];
+				formals = [NoAssignBind(Matrix, "matrix")];
 				locals = []; 
 				body = [];
 			} map
@@ -127,7 +127,7 @@ let check (globals, functions) =
 			StringMap.add "retrieveElement" {
 				rtyp = Void;          (* NEED TO FIGURE OUT HOW TO DIFFERENT MATRIX TYPES *)
 				fname = "retrieveElement";
-				formals = [NoAssignBind(Int, "row_index"); NoAssignBind(Int, "column_index"); NoAssignBind(Matrix Int, "matrix")];
+				formals = [NoAssignBind(Int, "row_index"); NoAssignBind(Int, "column_index"); NoAssignBind(Matrix, "matrix")];
 				locals = []; 
 				body = [];
 			} map
@@ -165,7 +165,6 @@ let check (globals, functions) =
 							match x with
 								AssignBind(t, n, _) -> StringMap.add n t m
 								| NoAssignBind(t, n) -> StringMap.add n t m
-								| FuncArg(f) -> StringMap.add f Void m
 						) StringMap.empty symbol_list
 		in
 		
@@ -188,16 +187,16 @@ let check (globals, functions) =
 								let get_derived e = let (ty, e') = expr e symbols in ignore(check_assign t ty (err ty e)); (ty, e') in
 								let entries = List.map get_derived a in
 								(Array t, SArrayLit(t, entries))
-			| MatrixLit(t, m) ->   let len = List.length (List.hd m) in
+			| MatrixLit(m) ->   let len = List.length (List.hd m) in
 								let err rt ex = "Illegal matrix entry: " ^ 
-									string_of_typ t ^ " = " ^ string_of_typ rt ^ " in " ^ 
+									"expected double but found " ^ string_of_typ rt ^ " in " ^ 
 									string_of_expr ex in
-								let get_derived e = let (ty, e') = expr e symbols in ignore(check_assign t ty (err ty e)); (ty, e') in
+								let get_derived e = let (ty, e') = expr e symbols in ignore(check_assign Double ty (err ty e)); (ty, e') in
 								let get_single arr = let cur_len = List.length arr in
 													if cur_len = len then List.map get_derived arr else 
 													raise (Failure ("Illegal row length in matrix. Expected length " ^ string_of_int len ^ " got length " ^ string_of_int cur_len)) in
 								let entries = List.map get_single m in
-								(Matrix t, SMatrixLit(t, entries))
+								(Matrix, SMatrixLit(entries))
 			| Id l      -> (type_of_identifier l symbols, SId l)
 			| Binop(e1, op, e2) -> 
 					let (lt, e1derived) = expr e1 symbols 
@@ -230,11 +229,6 @@ let check (globals, functions) =
 							match bind_arg with
 								AssignBind(_, _, _) -> raise (Failure ("illegal expression in function args"))
 								| NoAssignBind(t, _) -> t
-								(* add higher order func to func list by copying func that it is referencing THIS WILL ONLY ALLOW ONE USE OF THE ARG*)
-								| FuncArg(f) -> let fd2 = (find_func (string_of_expr e))
-												in ignore(
-													func_decls := add_func !func_decls {rtyp=fd2.rtyp; fname=f; formals=fd2.formals; locals=fd2.locals; body=fd2.body} 
-												);fd2.rtyp
 							in 
 					   let (et, e') = expr e symbols in
 					   let err = "Illegal argument found " ^ string_of_typ et ^
@@ -243,11 +237,12 @@ let check (globals, functions) =
 				  in
 				  let args' = List.map2 check_call fd.formals args
 				  in (fd.rtyp, SCall(fname, args'))
-			| Lambda(typ, arg, el) ->
+			| Lambda(typ, arg, el, target) ->
 					let new_symbols = StringMap.add arg typ symbols
 					in let one_ex e = expr e new_symbols
 					in let el' = List.map one_ex el
-					in (typ, SLambda(typ, arg, el'))
+					in let target' = expr target symbols
+					in (typ, SLambda(typ, arg, el', target'))
 		in expr e symbols
 	in
 	
@@ -285,8 +280,6 @@ let check (globals, functions) =
 				| (AssignBind(_,n1,_), NoAssignBind(_,n2)) when n1 = n2 -> true
 			    | (NoAssignBind(_,n1), AssignBind(_,n2,_)) when n1 = n2 -> true
 				| (NoAssignBind(_, n1), NoAssignBind(_, n2)) when n1 = n2 -> true
-				| (FuncArg(_), AssignBind(_,_,_)) -> true
-				| (FuncArg(_), NoAssignBind(_,_)) -> true
 				| (_,_) -> false
 		in 
 		let rec dups = function 
@@ -300,15 +293,10 @@ let check (globals, functions) =
 					match (x, y) with
 						(AssignBind(_,n1,_), AssignBind(_,n2,_))     -> compare n1 n2
 						| (AssignBind(_,n1,_), NoAssignBind(_,n2))   -> compare n1 n2
-						| (AssignBind (_, _, _), FuncArg(_))         -> 0
 						| (NoAssignBind(_,n1), AssignBind(_,n2,_))   -> compare n1 n2
 						| (NoAssignBind(_, n1), NoAssignBind(_, n2)) -> compare n1 n2
-						| (NoAssignBind (_, _), FuncArg(_))          -> 0
-						| (FuncArg(_), NoAssignBind(_,_))            -> 0
-						| (FuncArg(_), AssignBind(_,_,_))            -> 0
-						| (FuncArg(_), FuncArg(_))                   -> 0
 			) binds
-		in dups (sort_bind_list)
+		in dups (sort_bind_list);
 	in 
 	
 	(* Check global variables *)
@@ -322,7 +310,20 @@ let check (globals, functions) =
 	let check_function func =
 		check_binds "formal" func.formals;
 		check_binds "local" func.locals;
-	
+		
+		let store_binds binds = let get_one = function 
+			| AssignBind(t,n,e) -> SAssignBind(t,n,(derive_expr_in_context e binds))
+			| NoAssignBind(t,n) -> SNoAssignBind(t,n)
+			in
+			List.map get_one binds
+		in
+
+		let sformals = store_binds func.formals
+		in
+
+		let slocals =  store_binds func.locals
+		in 
+
 	    let context = ( globals @ func.formals @ func.locals )	
 		in
 		
@@ -359,10 +360,20 @@ let check (globals, functions) =
 	in  {
 		srtyp 		= func.rtyp;
 		sfname		= func.fname;
-		sformals 	= func.formals;
-		slocals		= func.locals;
+		sformals 	= sformals;
+		slocals		= slocals;
 		sbody		= match check_stmt (Block func.body) with
 			SBlock(sl) -> sl
 			| _ -> raise (Failure ("internal error: could not convert block"))
 	} 
-in (globals, (List.map check_function functions))
+in 
+
+let store_binds binds = let get_one = function 
+			| AssignBind(t,n,e) -> SAssignBind(t,n,(derive_expr_in_context e binds))
+			| NoAssignBind(t,n) -> SNoAssignBind(t,n)
+			in
+			List.map get_one binds
+in
+let sglobals = store_binds globals in
+
+(sglobals, (List.map check_function functions))

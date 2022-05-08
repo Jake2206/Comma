@@ -212,21 +212,6 @@ let%expect_test "if no eif or else" = run_test "def int main() { if (true) { } }
     }
     } |}];;
 
-let%expect_test "func declr w/ func as param" = run_test "def int main() { return test_f(1,1, test_f2); } def int test_f ( int a, int b, f ) { return f(a,b); } def int test_f2 ( int a, int b ) { return a*b; }"; 
-  [%expect {|
-    def int main()
-    {
-    return (int : test_f((int : 1), (int : 1), (int : test_f2)));
-    }
-    def int test_f(int a, int b, f)
-    {
-    return (int : f((int : a), (int : b)));
-    }
-    def int test_f2(int a, int b)
-    {
-    return (int : (int : a) * (int : b));
-    } |}];;
-
 let%expect_test "int array declaration" = run_test "def int main() { int array b = [3, 4] int; }"; 
   [%expect {|
     def int main()
@@ -241,7 +226,7 @@ let%expect_test "1d matrix declaration" = run_test "def int main() { int matrix 
     matrix m = |[[3, 4]]| int;
     } |}];;
 
-let%expect_test "2d matrix decl" = run_test "def int main() { double matrix x = |[[1.2,2.3],[1.2,1.3]]| double; }"; 
+let%expect_test "2d matrix decl" = run_test "def int main() { matrix x = |[1.2,2.3],[1.2,1.3]|; }"; 
   [%expect {|
     def int main()
     {
@@ -249,7 +234,7 @@ let%expect_test "2d matrix decl" = run_test "def int main() { double matrix x = 
     }
   |}];;
 
-let%expect_test "lambda func decl in main" = run_test "def int main() { int a = 1; int b=1; b = @int c { c = c*2+a*5 }; b = b+a; }";
+let%expect_test "lambda func decl in main" = run_test "def int main() { int a = 1; int b=1; b = (@int c { c = c*2+a*5 } b); }";
   [%expect {|
   def int main()
   {

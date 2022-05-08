@@ -10,12 +10,16 @@ and sx =
   | SCharLit of char
   | SDoubLit of string
   | SArrayLit of typ * sexpr list
-  | SMatrixLit of typ * (sexpr list) list
+  | SMatrixLit of (sexpr list) list
   | SId of string
   | SBinop of sexpr * bop * sexpr
   | SAssign of string * sexpr
   | SCall of string * sexpr list
-  | SLambda of typ * string * sexpr list
+  | SLambda of typ * string * sexpr list * sexpr
+
+type sbind =
+  | SAssignBind of typ * string * sexpr
+  | SNoAssignBind of typ * string 
 
 type sstmt =
   | SBlock of sstmt list
@@ -28,12 +32,12 @@ type sstmt =
 type sfunc_def = {
   srtyp: typ;
   sfname: string;
-  sformals: bind list;
-  slocals: bind list;
+  sformals: sbind list;
+  slocals: sbind list;
   sbody: sstmt list;
 }
 
-type sprogram = bind list * sfunc_def list
+type sprogram = sbind list * sfunc_def list
 
 (* Pretty-printing functions *)
 
@@ -51,16 +55,26 @@ let rec string_of_sexpr (t, e) =
 	  | SDoubLit(d) -> d
 	  | SBoolLit(true) -> "true"
 	  | SBoolLit(false) -> "false"
-    | SMatrixLit(t, m) -> "|[" ^ string_of_slist (List.map (fun a -> string_of_slist (List.map string_of_sexpr a)) m) ^ "]| " ^ string_of_typ t
+    | SMatrixLit(m) -> "|[" ^ string_of_slist (List.map (fun a -> string_of_slist (List.map string_of_sexpr a)) m) ^ "]| "
 	  | SArrayLit(t, a) ->  "[" ^ (String.concat ", " (List.map string_of_sexpr a)) ^ "] " ^ string_of_typ t
 	  | SId(s) -> s
 	  | SBinop(e1, o, e2) ->
 		string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
 	  | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e
 	  | SCall(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
-    | SLambda(typ, id, e) -> "@ " ^ string_of_typ typ ^ id ^ "{ " ^ String.concat "\n" (List.map string_of_sexpr e) ^ " }"
+    | SLambda(typ, id, e, arg) -> "@ " ^ string_of_typ typ ^ id ^ "{ " ^ String.concat "\n" (List.map string_of_sexpr e) ^ " }" ^ string_of_sexpr arg
 	) ^ ")"
-	
+
+let string_of_svdecl bind = 
+  match bind with 
+  SAssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_sexpr e ^ ";\n"
+  | SNoAssignBind(t, i) -> string_of_typ t ^ " " ^ i ^ ";\n"
+  
+let string_of_sargs bind = 
+  match bind with
+  SAssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_sexpr e
+  | SNoAssignBind(t, i) -> string_of_typ t ^ " " ^ i
+
 let rec string_of_sstmt = function
     SBlock(sstmts) ->
     "{\n" ^ String.concat "" (List.map string_of_sstmt sstmts) ^ "}\n"
@@ -73,13 +87,13 @@ let rec string_of_sstmt = function
 
 let string_of_sfdecl fdecl =
   "def " ^ string_of_typ fdecl.srtyp ^ " " ^ fdecl.sfname ^ "(" ^ String.concat ", " 
-  (List.map (fun x -> string_of_args x) fdecl.sformals) ^ ")\n{\n" ^
-  String.concat "" (List.map string_of_vdecl fdecl.slocals) ^
+  (List.map (fun x -> string_of_sargs x) fdecl.sformals) ^ ")\n{\n" ^
+  String.concat "" (List.map string_of_svdecl fdecl.slocals) ^
   String.concat "" (List.map string_of_sstmt fdecl.sbody) ^
   "}\n"
 
 let string_of_sprogram (binds, fdecls) =
-  String.concat "" (List.map string_of_vdecl binds) ^ "\n" ^
+  String.concat "" (List.map string_of_svdecl binds) ^ "\n" ^
   String.concat "" (List.map string_of_sfdecl fdecls)
   
   
