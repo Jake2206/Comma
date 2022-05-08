@@ -82,6 +82,12 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
     L.function_type void_t [| |] in
   let print_hello_func : L.llvalue =
     L.declare_function "printHello" print_hello_t the_module in 
+  
+  let printf_t : L.lltype =
+    L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
+  let printf_func : L.llvalue = 
+    L.declare_function "printf" printf_t the_module in 
+  
 
 
   (* Define each function (arguments and return type) so we can

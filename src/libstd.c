@@ -284,6 +284,7 @@ double retrieveElement(int row_index, int column_index, struct Matrix *matrix)
 }
 
 
+/*
 int main()
 {
     printHello();
@@ -313,7 +314,7 @@ int main()
     struct Matrix *calcMatrix = crossProduct(v1, v2);
     outputCSV(calcMatrix, "testOutput.csv");
 
-    /*
+    
     print("Hello world");
 
     struct Matrix *matrix = parseCSV("test.csv");
@@ -332,6 +333,7 @@ int main()
     printf("%lf\n", retrieveElement(1, 3, matrix));
     printf("%lf\n", retrieveElement(1, 4, matrix));
     return 0;
-    */
+    
 } 
+*/
 
