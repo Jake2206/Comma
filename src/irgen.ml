@@ -87,7 +87,12 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
   in
 
   (* Construct code for an expression; return its value *)
-  let rec build_expr builder ((_, e) : sexpr) var_map int_format_str = match e with
+  let rec build_expr builder ((_, e) : sexpr) var_map = 
+    (*Format type for C print functions. Add these to the print function calls*)
+    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder
+    and float_format_str = L.build_global_stringptr "%g\n" "fmt" builder
+    and str_format_str = L.build_global_stringptr "%s\n" "fmt" builder in
+    match e with
       SIntLit i  -> L.const_int i32_t i
     | SBoolLit b  -> L.const_int i1_t (if b then 1 else 0)
     | SDoubLit d -> L.const_float_of_string double_t d
@@ -96,7 +101,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
     | SId s       -> L.build_load (lookup s var_map) s builder
     | SArrayLit(typ, a) -> let ret = match typ with (*Referenced SCIC project to get an idea on how to implement arrays*)
                               A.Int | A.Bool | A.Char -> let t = ltype_of_typ typ in
-                                let build_one e = build_expr builder e var_map int_format_str in
+                                let build_one e = build_expr builder e var_map in
                                 let arr = List.map build_one a in
                                 let n = List.length a in
                                 let ptr = L.build_array_malloc t (L.const_int t n) "" builder  in
@@ -107,7 +112,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
                                             (L.pointer_type (L.type_of elem)) "" builder in
                                         let _ = (L.build_store elem cptr builder) in i + 1) 0 arr); ptr
                               | A.Double -> let t = ltype_of_typ typ in 
-                                let build_one e = build_expr builder e var_map int_format_str in
+                                let build_one e = build_expr builder e var_map in
                                 let arr = List.map build_one a in
                                 let n = List.length a in
                                 let ptr = L.build_array_malloc t (L.const_int i64_t n) "" builder  in
@@ -119,7 +124,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
                                         let _ = (L.build_store elem cptr builder) in i + 1) 0 arr); ptr
                               | _ -> raise(Failure("Invalid array type"))
                             in ret
-    | SMatrixLit(m) ->  let build_one e = build_expr builder e var_map int_format_str in
+    | SMatrixLit(m) ->  let build_one e = build_expr builder e var_map in
                         let rows = List.map (List.map build_one) m in
                         let n = List.length m in
                         let ptr = L.build_array_malloc double_t (L.const_int i64_t n) "" builder  in
@@ -130,11 +135,11 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
                                     (L.pointer_type (L.type_of elem)) "" builder in
                                 let _ = (L.build_store elem cptr builder) in i + 1) 0 ls) rows); ptr
 
-    | SAssign(s, e) -> let e' = build_expr builder e var_map int_format_str in
+    | SAssign(s, e) -> let e' = build_expr builder e var_map in
       ignore(L.build_store e' (lookup s var_map) builder); e'
     | SBinop ((t1, e1), op, (t2, e2)) when t1 == A.Double -> (*WE NEED TO SET UP NON-INT OPERATIONS HERE*)
-      let e1' = build_expr builder (t1, e1) var_map int_format_str
-      and e2' = build_expr builder (t1, e2) var_map int_format_str in
+      let e1' = build_expr builder (t1, e1) var_map
+      and e2' = build_expr builder (t1, e2) var_map in
       (match op with
          A.Add     -> L.build_fadd
        | A.Sub     -> L.build_fsub
@@ -150,8 +155,8 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
        | A.GreatEqual -> L.build_fcmp L.Fcmp.Oge
       ) e1' e2' "tmp" builder
     | SBinop ((t1, e1), op, (t2, e2)) -> (*WE NEED TO SET UP NON-INT OPERATIONS HERE*)
-      let e1' = build_expr builder (t1, e1) var_map int_format_str
-      and e2' = build_expr builder (t1, e2) var_map int_format_str in
+      let e1' = build_expr builder (t1, e1) var_map
+      and e2' = build_expr builder (t1, e2) var_map in
       (match op with
          A.Add     -> L.build_add
        | A.Sub     -> L.build_sub
@@ -167,19 +172,19 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
        | A.GreatEqual -> L.build_icmp L.Icmp.Sge
       ) e1' e2' "tmp" builder
     | SCall ("print", [e]) ->
-      L.build_call printf_func [| int_format_str ; (build_expr builder e var_map int_format_str) |]
+      L.build_call printf_func [| str_format_str ; (build_expr builder e var_map) |]
         "printf" builder
     | SCall (f, args) ->
       let (fdef, _) = StringMap.find f function_decls in
-      let llargs = List.rev (List.map (fun e -> build_expr builder e var_map int_format_str) (List.rev args)) in
+      let llargs = List.rev (List.map (fun e -> build_expr builder e var_map) (List.rev args)) in
       let result = f ^ "_result" in
       L.build_call fdef (Array.of_list llargs) result builder
     | SLambda (typ, arg, el, target) ->
       let new_local = L.build_alloca (ltype_of_typ typ) arg builder in
       let new_vars = StringMap.add arg new_local var_map in 
-      ignore(build_expr builder (typ, (SAssign(arg, target))) new_vars int_format_str);
-      ignore(List.map (fun e -> build_expr builder e new_vars int_format_str) el);
-      build_expr builder (typ, SId(arg)) new_vars int_format_str
+      ignore(build_expr builder (typ, (SAssign(arg, target))) new_vars);
+      ignore(List.map (fun e -> build_expr builder e new_vars) el);
+      build_expr builder (typ, SId(arg)) new_vars
   in
 
   let assign_global m bind =
@@ -187,8 +192,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
           SNoAssignBind(t,n) -> m
         | SAssignBind(_,n,e) -> let (the_function, _) = StringMap.find "main" function_decls in
                                 let temp_builder = L.builder_at_end context (L.entry_block the_function) in
-                                let temp_int_format_str = L.build_global_stringptr "%d\n" "fmt" temp_builder in
-                                let e' = build_expr temp_builder e global_vars temp_int_format_str in
+                                let e' = build_expr temp_builder e global_vars in
                                 ignore(L.build_store e' (lookup n m) temp_builder); m
   in
   ignore(List.fold_left assign_global global_vars globals);
@@ -205,8 +209,6 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
   let build_function_body fdecl =
     let (the_function, _) = StringMap.find fdecl.sfname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
-
-    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
 
         (* Construct the function's "locals": formal arguments and locally
        declared variables.  Allocate each on the stack, initialize their
@@ -227,7 +229,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
           SNoAssignBind(t,n) -> let local_var = L.build_alloca (ltype_of_typ t) n builder
                                  in StringMap.add n local_var m
         | SAssignBind(t,n,e) -> let local_var = L.build_alloca (ltype_of_typ t) n builder
-                                 in ignore(L.build_store (build_expr builder e m int_format_str) local_var builder); 
+                                 in ignore(L.build_store (build_expr builder e m) local_var builder); 
                                  StringMap.add n local_var m
       in
 
@@ -250,10 +252,10 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
        after the one generated by this call) *)
     let rec build_stmt builder = function
         SBlock sl -> List.fold_left build_stmt builder sl
-      | SExpr e -> ignore(build_expr builder e local_vars int_format_str); builder
-      | SReturn e -> ignore(L.build_ret (build_expr builder e local_vars int_format_str) builder); builder
+      | SExpr e -> ignore(build_expr builder e local_vars); builder
+      | SReturn e -> ignore(L.build_ret (build_expr builder e local_vars) builder); builder
       | SIf (predicate, then_stmt, else_stmt) ->
-        let bool_val = build_expr builder predicate local_vars int_format_str in
+        let bool_val = build_expr builder predicate local_vars in
 
         let then_bb = L.append_block context "then" the_function in
         ignore (build_stmt (L.builder_at_end context then_bb) then_stmt);
@@ -273,7 +275,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
         let build_br_while = L.build_br while_bb in (* partial function *)
         ignore (build_br_while builder);
         let while_builder = L.builder_at_end context while_bb in
-        let bool_val = build_expr while_builder predicate local_vars int_format_str in
+        let bool_val = build_expr while_builder predicate local_vars in
 
         let body_bb = L.append_block context "while_body" the_function in
         add_terminal (build_stmt (L.builder_at_end context body_bb) body) build_br_while;

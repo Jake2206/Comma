@@ -19,7 +19,7 @@ let check (globals, functions) =
 			StringMap.add "print" {
 				rtyp = Void;
 				fname = "print";
-				formals = [NoAssignBind(Int, "i")]; 
+				formals = [NoAssignBind(Array Char, "i")]; 
 				locals = []; 
 				body = [];
 			} map
