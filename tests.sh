@@ -12,6 +12,7 @@ ocamlbuild -pkgs llvm llvm.analysis comma.native
 
 make
 
+# edit commands as needed
 for TESTFILE in ./test_files/*
 do 
   ./comma.native -l $TESTFILE > IRoutfile.ll
