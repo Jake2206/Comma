@@ -37,7 +37,7 @@ let check (globals, functions) =
 			StringMap.add "outputCSV" {
 				rtyp = Void;
 				fname = "outputCSV";
-				formals = [NoAssignBind(Matrix, "matrix"); NoAssignBind(Array Char, "outputFilepath")];  (* NEEDS TO BE CHANGED TO ARRAY, CHAR ARRAY, OR LIST *)
+				formals = [NoAssignBind(Matrix, "matrix"); NoAssignBind(Array Char, "outputFilepath")];
 				locals = []; 
 				body = [];
 			} map
@@ -116,7 +116,7 @@ let check (globals, functions) =
 		in 
 		let map = 
 			StringMap.add "retrieveElement" {
-				rtyp = Void;          (* NEED TO FIGURE OUT HOW TO DIFFERENT MATRIX TYPES *)
+				rtyp = Void;
 				fname = "retrieveElement";
 				formals = [NoAssignBind(Int, "row_index"); NoAssignBind(Int, "column_index"); NoAssignBind(Matrix, "matrix")];
 				locals = []; 
@@ -143,7 +143,7 @@ let check (globals, functions) =
 	(* Find function in table *)
 	let find_func s =
 		try StringMap.find s !func_decls
-		with Not_found -> raise (Failure ("no such function declared: " ^ s)) (* ignore(StringMap.iter (fun x y -> Printf.printf "%s -> %s\n" x (string_of_typ y.rtyp)) !func_decls); *)
+		with Not_found -> raise (Failure ("no such function declared: " ^ s))
 	in
 	
 	(* Helper function to get expression type and derived type *)
@@ -167,7 +167,7 @@ let check (globals, functions) =
 
         (* Evaluate an expression *)		
 		let rec expr e symbols = match e with
-			NulLit -> (Void, SNulLit)      (* What is the internal representation of null, 0? Void for now*)
+			NulLit -> (Void, SNulLit)
 			| IntLit l -> (Int, SIntLit l)
 			| BoolLit l -> (Bool, SBoolLit l)
 			| CharLit l -> (Char, SCharLit l)
@@ -241,7 +241,7 @@ let check (globals, functions) =
 	
 	let check_binds (kind  : string) (binds : bind list) =
 		(* Check variables bind to a real type (not null)
-			And check that formals do not have expression with declaration*)
+			And check that formals do not have expressions with declaration*)
 		List.iter (function
 			AssignBind(Void, _, _)  -> raise (Failure ("illegal bind: cannot be of type nul"))
 			| NoAssignBind(Void, _) -> raise (Failure ("illegal bind: cannot be of type nul"))
@@ -255,7 +255,7 @@ let check (globals, functions) =
 				if dt == t then
 					()
 				else
-					if dt == Void then   (* Need to fix if we change type of Nul *)
+					if dt == Void then
 						()
 					else
 						if string_of_typ t == string_of_typ dt then 
@@ -304,6 +304,7 @@ let check (globals, functions) =
 		check_binds "formal" func.formals;
 		check_binds "local" func.locals;
 		
+		(*Helper function to convert binds to Sbinds*)
 		let store_binds binds = let get_one = function 
 			| AssignBind(t,n,e) -> SAssignBind(t,n,(derive_expr_in_context e binds))
 			| NoAssignBind(t,n) -> SNoAssignBind(t,n)
@@ -311,9 +312,9 @@ let check (globals, functions) =
 			List.map get_one binds
 		in
 
+		(*Convert binds to Sbind types*)
 		let sformals = store_binds func.formals
 		in
-
 		let slocals =  store_binds func.locals
 		in 
 
@@ -361,6 +362,7 @@ let check (globals, functions) =
 	} 
 in 
 
+(*Convert global binds to Sbinds*)
 let store_binds binds = let get_one = function 
 			| AssignBind(t,n,e) -> SAssignBind(t,n,(derive_expr_in_context e binds))
 			| NoAssignBind(t,n) -> SNoAssignBind(t,n)

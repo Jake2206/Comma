@@ -22,7 +22,7 @@ open Sast
 module StringMap = Map.Make(String)
 
 (* translate : Sast.program -> Llvm.module *)
-let translate (globals, functions) =  (* NOTE: our sprogram differs from microC! *)
+let translate (globals, functions) =
   let context    = L.global_context () in
 
   (* Create the LLVM compilation module into which
@@ -37,7 +37,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
   and void_t     = L.void_type   context 
   and i64_t      = L.i64_type    context in
 
-  (* Return the LLVM type for a MicroC type *)
+  (* Return the LLVM type for a Comma type *)
   let rec ltype_of_typ = function
       A.Int       -> i32_t
     | A.Bool      -> i1_t
@@ -63,14 +63,6 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
       let init = L.const_int (ltype_of_typ t) 0
       in StringMap.add n (L.define_global n init the_module) m in
     List.fold_left global_var StringMap.empty globals in
-
-  (* Declare standard library functions *)
-  (*
-  let printf_t : L.lltype =
-    L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
-  let printf_func : L.llvalue =
-    L.declare_function "printf" printf_t the_module in
-  *)
   
   let printf_t : L.lltype =
     L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
@@ -106,10 +98,10 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
       SIntLit i  -> L.const_int i32_t i
     | SBoolLit b  -> L.const_int i1_t (if b then 1 else 0)
     | SDoubLit d -> L.const_float_of_string double_t d
-    | SNulLit -> L.const_int i32_t 0 (*Is this correct?*)
+    | SNulLit -> L.const_int i32_t 0
     | SCharLit c -> L.const_int i8_t (int_of_char c)
     | SId s       -> L.build_load (lookup s var_map) s builder
-    | SArrayLit(typ, a) -> let ret = match typ with (*Referenced SCIC project to get an idea on how to implement arrays*)
+    | SArrayLit(typ, a) -> let ret = match typ with (*Referenced SCIC project to get an idea on how to implement arrays and matrices*)
                               A.Int | A.Bool | A.Char -> let t = ltype_of_typ typ in
                                 let build_one e = build_expr builder e var_map in
                                 let arr = List.map build_one a in
@@ -146,7 +138,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
                                 let _ = (L.build_store elem cptr builder) in i + 1) 0 ls) rows); ptr
     | SAssign(s, e) -> let e' = build_expr builder e var_map in
       ignore(L.build_store e' (lookup s var_map) builder); e'
-    | SBinop ((t1, e1), op, (t2, e2)) when t1 == A.Double -> (*WE NEED TO SET UP NON-INT OPERATIONS HERE*)
+    | SBinop ((t1, e1), op, (t2, e2)) when t1 == A.Double ->
       let e1' = build_expr builder (t1, e1) var_map
       and e2' = build_expr builder (t1, e2) var_map in
       (match op with
@@ -163,7 +155,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
        | A.LessEqual -> L.build_fcmp L.Fcmp.Ole
        | A.GreatEqual -> L.build_fcmp L.Fcmp.Oge
       ) e1' e2' "tmp" builder
-    | SBinop ((t1, e1), op, (t2, e2)) -> (*WE NEED TO SET UP NON-INT OPERATIONS HERE*)
+    | SBinop ((t1, e1), op, (t2, e2)) ->
       let e1' = build_expr builder (t1, e1) var_map
       and e2' = build_expr builder (t1, e2) var_map in
       (match op with
@@ -207,6 +199,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
       build_expr builder (typ, SId(arg)) new_vars
   in
 
+  (*Evaluate and assign the global variables*)
   let assign_global m bind =
         match bind with
           SNoAssignBind(t,n) -> m
@@ -297,6 +290,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
         ignore(L.build_cond_br bool_val body_bb end_bb while_builder);
         L.builder_at_end context end_bb
 
+      (*Build a while statement from a for statement*)
       | SFor (predicate, increment, body) ->
         build_stmt builder (SBlock [SWhile (predicate, SBlock[body; SExpr increment])])
 
