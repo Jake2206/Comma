@@ -19,20 +19,11 @@ let check (globals, functions) =
 			StringMap.add "print" {
 				rtyp = Void;
 				fname = "print";
-				formals = [NoAssignBind(Array Char, "i")]; 
-				locals = []; 
+				formals = [NoAssignBind(Array Char, "i")];
+				locals = [];
 				body = [];
 			} map
 		in
-                let map =
-                        StringMap.add "printHello" {
-                                rtyp = Void;
-                                fname = "printHello";
-                                formals = [];
-                                locals = [];
-                                body = [];
-                        } map
-                in 
 		let map = 
 			StringMap.add "parseCSV" {
 				rtyp = Matrix;
@@ -233,7 +224,9 @@ let check (globals, functions) =
 					   let (et, e') = expr e symbols in
 					   let err = "Illegal argument found " ^ string_of_typ et ^
 								 " expected " ^ string_of_typ bind_typ ^ " in " ^ string_of_expr e ^ " in function " ^ fname
-					   in (check_assign bind_typ et err, e')
+					   in match fname with
+					    "print" -> (et, e')
+					    | _ -> (check_assign bind_typ et err, e') 
 				  in
 				  let args' = List.map2 check_call fd.formals args
 				  in (fd.rtyp, SCall(fname, args'))

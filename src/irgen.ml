@@ -45,7 +45,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
     | A.Char      -> i8_t
     | A.Void      -> void_t
     | A.Array(t)  -> L.pointer_type (ltype_of_typ t)
-    | A.Matrix -> L.pointer_type double_t
+    | A.Matrix -> L.pointer_type (L.pointer_type double_t)
   in
 
   let bind_typ = function
@@ -71,24 +71,11 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
   let printf_func : L.llvalue =
     L.declare_function "printf" printf_t the_module in
   *)
-
-
-  let print_t : L.lltype =
-    L.function_type void_t [| L.pointer_type i8_t |] in 
-  let print_func : L.llvalue = 
-    L.declare_function "print" print_t the_module in 
-
-  let print_hello_t : L.lltype =
-    L.function_type void_t [| |] in
-  let print_hello_func : L.llvalue =
-    L.declare_function "printHello" print_hello_t the_module in 
   
   let printf_t : L.lltype =
     L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func : L.llvalue = 
     L.declare_function "printf" printf_t the_module in 
-  
-
 
   (* Define each function (arguments and return type) so we can
      call it even before we've created its body *)
@@ -109,10 +96,12 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
 
   (* Construct code for an expression; return its value *)
   let rec build_expr builder ((_, e) : sexpr) var_map = 
-    (*Format type for C print functions. Add these to the print function calls*)
+    (*Format type for C print functions*)
     let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder
     and float_format_str = L.build_global_stringptr "%g\n" "fmt" builder
+    and char_format_str = L.build_global_stringptr "%c\n" "fmt" builder
     and str_format_str = L.build_global_stringptr "%s\n" "fmt" builder in
+
     match e with
       SIntLit i  -> L.const_int i32_t i
     | SBoolLit b  -> L.const_int i1_t (if b then 1 else 0)
@@ -132,7 +121,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
                                         let cptr = L.build_pointercast eptr 
                                             (L.pointer_type (L.type_of elem)) "" builder in
                                         let _ = (L.build_store elem cptr builder) in i + 1) 0 arr); ptr
-                              | A.Double -> let t = ltype_of_typ typ in 
+                              | A.Double -> let t = ltype_of_typ typ in
                                 let build_one e = build_expr builder e var_map in
                                 let arr = List.map build_one a in
                                 let n = List.length a in
@@ -148,14 +137,13 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
     | SMatrixLit(m) ->  let build_one e = build_expr builder e var_map in
                         let rows = List.map (List.map build_one) m in
                         let n = List.length m in
-                        let ptr = L.build_array_malloc double_t (L.const_int i64_t n) "" builder  in
+                        let ptr = L.build_array_malloc (L.pointer_type double_t) (L.const_int i64_t n) "" builder  in
                         ignore (List.map (fun ls -> List.fold_left (fun i elem ->
                                 let idx = L.const_int i32_t i in
                                 let eptr = L.build_gep ptr [|idx|] "" builder in
                                 let cptr = L.build_pointercast eptr 
                                     (L.pointer_type (L.type_of elem)) "" builder in
                                 let _ = (L.build_store elem cptr builder) in i + 1) 0 ls) rows); ptr
-
     | SAssign(s, e) -> let e' = build_expr builder e var_map in
       ignore(L.build_store e' (lookup s var_map) builder); e'
     | SBinop ((t1, e1), op, (t2, e2)) when t1 == A.Double -> (*WE NEED TO SET UP NON-INT OPERATIONS HERE*)
@@ -193,11 +181,19 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
        | A.GreatEqual -> L.build_icmp L.Icmp.Sge
       ) e1' e2' "tmp" builder
            (* Evaluate standard library function calls *) 
-    | SCall ("printHello", []) ->
-      L.build_call print_hello_func [| |] "" builder
     | SCall ("print", [e]) ->
-      L.build_call printf_func [| str_format_str ; (build_expr builder e var_map) |]
-        "printf" builder
+      let print_it e =
+        let e' = build_expr builder e var_map in 
+        let (typ, _) = e in
+        match typ with
+          A.Array(typ) -> if typ = A.Char then L.build_call printf_func [| str_format_str ; e' |] "printf" builder
+                              else raise(Failure("Unprintable argument given to print function"))
+          | A.Int -> L.build_call printf_func [| int_format_str ; e' |] "printf" builder
+          | A.Bool -> L.build_call printf_func [| int_format_str ; e' |] "printf" builder
+          | A.Char -> L.build_call printf_func [| char_format_str ; e' |] "printf" builder
+          | A.Double -> L.build_call printf_func [| float_format_str ; e' |] "printf" builder
+          | _ -> raise(Failure("Unprintable argument given to print function")) in
+      print_it e
     | SCall (f, args) ->
       let (fdef, _) = StringMap.find f function_decls in
       let llargs = List.rev (List.map (fun e -> build_expr builder e var_map) (List.rev args)) in

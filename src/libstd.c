@@ -11,12 +11,6 @@ void print(char *str)
     printf("%s\n", str);
 }
 
-
-void printHello() {
-    printf("Hello\n");
-}
-
-
 struct Matrix *parseCSV(char *filepath)
 {
     // Open and read from file

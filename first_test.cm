@@ -1,6 +1,4 @@
 def int main(){
-	char array b = ['t','e','s','t'] char;
-	char a = 't';
-	print(b);
+	matrix m = |[1.1,2.2],[3.3,4.4]|;
 	return 0;
 }

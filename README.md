@@ -57,16 +57,12 @@ Invoke "cc" to assemble the .s file, link in libstd.o, and generate an executabl
 8.   cc -o IRoutfile.exe IRoutfile.s libstd.o
 ```
 
-
-
 NOTE: the -l flag on the compiler prints to LLVM IR
 To execute the previously generated IR code, we simply execute the executable constructed from the previous step.
 
 ```console
 9. ./IRoutfile.exe
 ```
-
-
 
 10. Docker can be exited through
 ```console
