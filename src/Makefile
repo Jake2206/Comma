@@ -8,7 +8,7 @@ libstd.a: libstd.o
 	ar -crs libstd.a libstd.o 
 	ranlib libstd.a
 
-libstd.o: libstd.c 
+libstd.o: libstd.c libstd.h 
 
 
 .PHONY: clean

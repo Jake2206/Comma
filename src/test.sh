@@ -3,8 +3,10 @@
 make clean
 make
 
-./comma.native -l infile.test > IRoutfile.out
+./comma.native -l infile.test > IRoutfile.ll
 
-lli-11 -extra-archive libstd.a IRoutfile.out
 
+llc -relocation-model=pic IRoutfile.ll > IRoutfile.s
+
+cc -o IRoutfile.exe IRoutfile.s libstd.o
 

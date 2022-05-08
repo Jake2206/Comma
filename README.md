@@ -110,17 +110,29 @@ Before the IR can be generated, the compiler (namely, "comma") must be built. Th
 4. ocamlbuild -pkgs llvm,llvm.analysis comma.native
 ````
 
-Run make construct library
+Run make to construct library
 ```console
 5. make
-````
+```
 
 --GENERATING THE LLVM IR--
 Once the compiler is built, the LLVM IR can be generated using
 
 ```console
-6. ./comma.native -l infile.test > IRoutfile.out
+6. ./comma.native -l infile.test > IRoutfile.ll
 ```
+
+Invoke "llc" to produce a .s assembly file
+```console
+7. llc -relocation-model=pic IRoutfile.ll > IRoutfile.s
+```
+
+Invoke "cc" to assemble the .s file, link in libstd.o, and generate an executable
+```console
+8.   cc -o IRoutfile.exe IRoutfile.s libstd.o
+```
+
+
 
 NOTE: the -l flag on the compiler prints to LLVM IR
 ocamlbuild -pkgs llvm microc.native
@@ -129,13 +141,15 @@ Once the IR has been generated to file, it can be run using lli.
 Unfortunately, lli is finicky (which is why getting the right version of llvm is so important). The command to run it is lli-<version>, which will vary depending on the LLVM installation.
 If the installed version of LLVM is 11, for example, the corresponding lli command will be lli-11.
 
-To execute the previously generated IR code, we pass the IR outfile to the correct lli command. Option '-extra-archive' adds our standard library to the available C functions:
+To execute the previously generated IR code, we simply execute the executable constructed from the previous step.
 
 ```console
-7. lli-<version> -extra-archive <pathToLibrary> IRoutfile.out
+9. ./IRoutfile.exe
 ```
 
-8. Docker can be exited through
+
+
+10. Docker can be exited through
 ```console
 exit
 ```
