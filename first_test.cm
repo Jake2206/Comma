@@ -1,4 +1,10 @@
 def int main(){
-	matrix m = |[1.1,2.2],[3.3,4.4]|;
+	int i = 1;
+	if (i==0){
+	print(0);
+	} else{
+	print(2);
+	}
+
 	return 0;
 }

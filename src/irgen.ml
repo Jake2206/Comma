@@ -259,20 +259,20 @@ let translate (globals, functions) =
         SBlock sl -> List.fold_left build_stmt builder sl
       | SExpr e -> ignore(build_expr builder e local_vars); builder
       | SReturn e -> ignore(L.build_ret (build_expr builder e local_vars) builder); builder
-      | SIf (predicate, then_stmt, else_stmt) ->
+      | SIf (predicate, if_stmt, else_stmt) ->
         let bool_val = build_expr builder predicate local_vars in
 
-        let then_bb = L.append_block context "then" the_function in
-        ignore (build_stmt (L.builder_at_end context then_bb) then_stmt);
+        let if_bb = L.append_block context "then" the_function in
+        ignore (build_stmt (L.builder_at_end context if_bb) if_stmt);
         let else_bb = L.append_block context "else" the_function in
         ignore (build_stmt (L.builder_at_end context else_bb) else_stmt);
 
         let end_bb = L.append_block context "if_end" the_function in
         let build_br_end = L.build_br end_bb in (* partial function *)
-        add_terminal (L.builder_at_end context then_bb) build_br_end;
+        add_terminal (L.builder_at_end context if_bb) build_br_end;
         add_terminal (L.builder_at_end context else_bb) build_br_end;
 
-        ignore(L.build_cond_br bool_val then_bb else_bb builder);
+        ignore(L.build_cond_br bool_val if_bb else_bb builder);
         L.builder_at_end context end_bb
 
       | SWhile (predicate, body) ->
