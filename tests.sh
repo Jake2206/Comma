@@ -9,7 +9,7 @@ eval $(opam env)
 cd src
 
 ocamlbuild -pkgs llvm llvm.analysis comma.native
-
+make clean
 make
 
 # edit commands as needed
