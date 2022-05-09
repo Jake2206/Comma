@@ -87,11 +87,13 @@ let translate (globals, functions) =
     L.declare_function "print" print_t the_module in 
   *)
 
+  (*
   let print_hello_t : L.lltype =
     L.function_type void_t [| |] in
   let print_hello_func : L.llvalue =
     L.declare_function "printHello" print_hello_t the_module in 
-  
+  *)  
+
   let printf_t : L.lltype =
     L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func : L.llvalue = 
@@ -103,6 +105,10 @@ let translate (globals, functions) =
   let initMatrix_func : L.llvalue = 
     L.declare_function "initMatrix" initMatrix_t the_module in
 
+  let printMatrix_t : L.lltype = 
+    L.var_arg_function_type void_t [| L.pointer_type struct_matrix_type |] in
+  let printMatrix_func : L.llvalue = 
+    L.declare_function "printMatrix" printMatrix_t the_module in
   
   let parseCSV_t : L.lltype =
     L.function_type (L.pointer_type struct_matrix_type) [| L.pointer_type i8_t |] in
@@ -142,7 +148,7 @@ let translate (globals, functions) =
   (* cross product function *)
 
   let retrieveElement_t : L.lltype = 
-    L.function_type i32_t [| i32_t ; i32_t ; (L.pointer_type struct_matrix_type) |] in 
+    L.function_type double_t [| i32_t ; i32_t ; (L.pointer_type struct_matrix_type) |] in 
   let retrieveElement_func : L.llvalue = 
     L.declare_function "retrieveElement" retrieveElement_t the_module in 
 
@@ -166,13 +172,11 @@ let translate (globals, functions) =
   (* Construct code for an expression; return its value *)
   let rec build_expr builder ((_, e) : sexpr) var_map = 
     (*Format type for C print functions. Add these to the print function calls*)
-    (*
+   
     let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder
     and float_format_str = L.build_global_stringptr "%g\n" "fmt" builder
     and char_format_str = L.build_global_stringptr "%c\n" "fmt" builder
     and str_format_str = L.build_global_stringptr "%s\n" "fmt" builder in
-    *)
-    let str_format_str = L.build_global_stringptr "%s\n" "fmt" builder in 
 
     match e with
       SIntLit i  -> L.const_int i32_t i
@@ -206,22 +210,30 @@ let translate (globals, functions) =
                                         let _ = (L.build_store elem cptr builder) in i + 1) 0 arr); ptr
                               | _ -> raise(Failure("Invalid array type"))
                             in ret
-    | SMatrixLit(m) ->  let build_one e = build_expr builder e var_map in
-                        let cols_num = 0 in 
+    | SMatrixLit(r, c, m) ->  let build_one e = build_expr builder e var_map in
                         let rows = List.map (List.map build_one) m in
-                        let rows_num = List.length rows in 
-                        let n = List.length m in
-                        let ptr = L.build_array_malloc (L.pointer_type double_t) (L.const_int i64_t n) "" builder in
-                        ignore (List.map (fun ls -> List.fold_left (fun i elem ->
-                                let idx = L.const_int i32_t i in
-                                let eptr = L.build_gep elements_ptr [|idx|] "" builder in
-                                let cptr = L.build_pointercast eptr 
-                                    (L.pointer_type (L.type_of elem)) "" builder in
-                                let _ = (L.build_store elem cptr builder) in i + 1) 0 ls) rows); 
-                        ptr
+                        let ptr = L.build_array_malloc (L.pointer_type double_t) (L.const_int i64_t r) "" builder in
+                        ignore (List.fold_left (fun index ls -> 
+                                let row_ptr = L.build_array_malloc (double_t) (L.const_int i64_t c) "" builder in 
+                                ignore(List.fold_left (fun i elem ->
+                                        let idx = L.const_int i32_t i in
+                                        let eptr = L.build_gep row_ptr [|idx|] "" builder in
+                                        let cptr = L.build_pointercast eptr 
+                                                (L.pointer_type (L.type_of elem)) "" builder in
+                                        let _ = (L.build_store elem cptr builder) 
+                                       in i + 1) 
+                                0 ls);
+                                let indxl = L.const_int i32_t index in 
+                                let eptrr = L.build_gep ptr [| indxl |] "" builder in 
+                                let cptrr = L.build_pointercast eptrr (L.pointer_type (L.pointer_type (double_t))) "" builder in 
+                                let _ = (L.build_store row_ptr cptrr builder)
+                                in index + 1)
+                                       
+                                0 rows); 
+                        
      
-                       (* L.build_call initMatrix_func [| L.const_int i32_t rows_num ; L.const_int i32_t cols_num ; elements_ptr |] "initMatrix" builder 
-*)
+                       L.build_call initMatrix_func [| L.const_int i32_t r ; L.const_int i32_t c ; ptr |] "initMatrix" builder 
+
     | SAssign(s, e) -> let e' = build_expr builder e var_map in
       ignore(L.build_store e' (lookup s var_map) builder); e'
     | SBinop ((t1, e1), op, (t2, e2)) when t1 == A.Double ->
@@ -275,15 +287,22 @@ let translate (globals, functions) =
       print_it e
     
        (* Evaluate standard library function calls *) 
+    (*
     | SCall ("printHello", []) ->
       L.build_call print_hello_func [| |] "" builder
+    *)
+    (*
     | SCall ("print", [e]) ->
       L.build_call printf_func [| str_format_str ; (build_expr builder e var_map) |]
         "printf" builder
+    *)
+    | SCall ("printMatrix", [e]) ->
+      L.build_call printMatrix_func [| (build_expr builder e var_map) |] "" builder 
+    
     | SCall ("parseCSV", [e]) -> 
       L.build_call parseCSV_func [| (build_expr builder e var_map) |] "parseCSV" builder
     | SCall ("outputCSV", [e1 ; e2]) -> 
-      L.build_call outputCSV_func [| (build_expr builder e1 var_map) ; (build_expr builder e2 var_map) |] "outputCSV" builder
+      L.build_call outputCSV_func [| (build_expr builder e1 var_map) ; (build_expr builder e2 var_map) |] "" builder
     | SCall ("scalarMulti", [e1 ; e2]) ->
       L.build_call scalarMulti_func [| (build_expr builder e1 var_map) ; (build_expr builder e2 var_map) |] "scalarMulti" builder
     | SCall ("scalarDiv", [e1 ; e2]) ->

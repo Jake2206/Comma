@@ -4,9 +4,24 @@
 
 def int main() {  
     char array t = ['t', 'e', 's', 't'] char;
-    print(t);
-
-    printHello();
+    char array output = ['o', 'u', 't'] char;
+    matrix m = |[1.2,1.4, 1.5], [4.1,4.4, 1.6]|;
+    double x;   
  
+    matrix fromFile = parseCSV(t);
+ 
+    matrix calcMatrix;
+
+    printMatrix(m);
+    printMatrix(fromFile);
+
+    calcMatrix = scalarDiv(10.0, fromFile);
+
+    printMatrix(calcMatrix);
+
+    x = retrieveElement(0, 0, calcMatrix);
+    print(x);
+    outputCSV(calcMatrix, output);
+    
 }
 

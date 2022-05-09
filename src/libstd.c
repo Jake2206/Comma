@@ -9,12 +9,7 @@
 
 
 
-struct Matrix *initMatrix(int rows, int columns, double **elements) {
-    printf("hello");
-    printf("rows: %d\n", rows);
-    printf("colums: %d\n", columns);
-
-	
+struct Matrix *initMatrix(int rows, int columns, double **elements) { 
     struct Matrix *matrix = malloc(sizeof(struct Matrix));
     matrix->rows = rows;
     matrix->columns = columns;
@@ -27,10 +22,6 @@ struct Matrix *initMatrix(int rows, int columns, double **elements) {
 void print(char *str)
 {
     printf("%s\n", str);
-}
-
-void printHello() {
-    printf("Hello\n");
 }
 
 
@@ -48,13 +39,15 @@ void printMatrix(struct Matrix *matrix) {
 
 struct Matrix *parseCSV(char *filepath)
 {
+    char final_filepath[300];
+    strcpy(final_filepath, filepath);
+    strcat(final_filepath, ".csv");    
     // Open and read from file
     FILE *fp;
-    fp = fopen(filepath, "r");
+    fp = fopen(final_filepath, "r");
     if (fp == NULL)
     {
-        print("No such file exists: ");
-        print(filepath);
+        printf("No such file exists: %s.csv \nExiting program now.\n", filepath);
         // Handle error case
         exit(-1);
     }
@@ -161,8 +154,11 @@ double *reallocate_matrix(double *elements, int cur_size, int new_size)
 
 void outputCSV(struct Matrix *matrix, char *filepath) {
     
+    char final_filepath[300];
+    strcpy(final_filepath, filepath);
+    strcat(final_filepath, ".csv");
     FILE *fp;
-    fp = fopen(filepath, "w+");
+    fp = fopen(final_filepath, "w+");
 
     for (int row = 0; row < matrix->rows; row++) {
         for (int col = 0; col < matrix->columns; col++) {

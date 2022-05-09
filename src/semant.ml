@@ -24,6 +24,16 @@ let check (globals, functions) =
 				body = [];
 			} map
 		in
+                let map = 
+                        StringMap.add "printMatrix" {
+                                rtyp = Void;
+                                fname = "printMatrix";
+                                formals = [NoAssignBind(Matrix, "Matrix")];
+                                locals = [];
+                                body = []; 
+
+                        } map
+                in
 		let map = 
 			StringMap.add "parseCSV" {
 				rtyp = Matrix;
@@ -116,7 +126,7 @@ let check (globals, functions) =
 		in 
 		let map = 
 			StringMap.add "retrieveElement" {
-				rtyp = Void;
+				rtyp = Double;
 				fname = "retrieveElement";
 				formals = [NoAssignBind(Int, "row_index"); NoAssignBind(Int, "column_index"); NoAssignBind(Matrix, "matrix")];
 				locals = []; 
@@ -183,11 +193,15 @@ let check (globals, functions) =
 									"expected double but found " ^ string_of_typ rt ^ " in " ^ 
 									string_of_expr ex in
 								let get_derived e = let (ty, e') = expr e symbols in ignore(check_assign Double ty (err ty e)); (ty, e') in
+                                                                let row_num = List.length m in
 								let get_single arr = let cur_len = List.length arr in
-													if cur_len = len then List.map get_derived arr else 
-													raise (Failure ("Illegal row length in matrix. Expected length " ^ string_of_int len ^ " got length " ^ string_of_int cur_len)) in
+													if cur_len = len then
+                                                                                                            
+                                                                                                            List.map get_derived arr 
+                                                                                                        else 
+													    raise (Failure ("Illegal row length in matrix. Expected length " ^ string_of_int len ^ " got length " ^ string_of_int cur_len)) in
 								let entries = List.map get_single m in
-								(Matrix, SMatrixLit(entries))
+								(Matrix, SMatrixLit(row_num, len, entries))
 			| Id l      -> (type_of_identifier l symbols, SId l)
 			| Binop(e1, op, e2) -> 
 					let (lt, e1derived) = expr e1 symbols 
