@@ -6,6 +6,24 @@
 #include <ctype.h>
 #include "libstd.h"
 
+
+
+
+struct Matrix *initMatrix(int rows, int columns, double **elements) {
+    printf("hello");
+    printf("rows: %d\n", rows);
+    printf("colums: %d\n", columns);
+
+	
+    struct Matrix *matrix = malloc(sizeof(struct Matrix));
+    matrix->rows = rows;
+    matrix->columns = columns;
+    matrix->elements = elements;
+
+    return matrix;
+}
+
+
 void print(char *str)
 {
     printf("%s\n", str);
@@ -14,6 +32,19 @@ void print(char *str)
 
 void printHello() {
     printf("Hello\n");
+}
+
+
+void printMatrix(struct Matrix *matrix) {
+    for (int row = 0; row < matrix->rows; row++) {
+        for (int col = 0; col < matrix->columns; col++) {
+            printf("%f", matrix->elements[row][col]);
+	    if (col != (matrix->columns - 1)) {
+               printf(",");
+	    }
+	}
+	printf("\n");
+    }
 }
 
 
