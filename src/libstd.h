@@ -20,7 +20,9 @@ struct Array
     double *elements;
 };
 
+struct Matrix *initMatrix(int rows, int columns, double **elements);
 void print(char *str);
+void printMatrix(struct Matrix *matrix);
 void printHello();
 struct Matrix *createMatrix(int rows, int columns);
 struct Matrix *parseCSV(char *filepath);
