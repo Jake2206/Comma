@@ -9,10 +9,6 @@ Jacob Alexander, jla2206
 
 We based our project files off of NanoC and MicroC. We also borrowed from Edward's projects. Refer to the LRM in `doc/plt_lrm.py` for more detailed information about the language and its implementation.
 
---Test Suite--
-
-We no longer have a functioning test suite after updating to docker.
-
 --IR GENERATION WITH LLVM--
 
 1. Make sure docker is running (can be installed here: https://docs.docker.com/engine/install/)
