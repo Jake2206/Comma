@@ -37,6 +37,11 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
   and void_t     = L.void_type   context 
   and i64_t      = L.i64_type    context in
 
+  let struct_matrix_type : L.lltype = L.named_struct_type context "Matrix" in
+  let _ = L.struct_set_body struct_matrix_type
+      [| i32_t ; i32_t ; L.pointer_type (L.pointer_type double_t) |] false in 
+ 
+
   (* Return the LLVM type for a MicroC type *)
   let rec ltype_of_typ = function
       A.Int       -> i32_t
@@ -45,7 +50,7 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
     | A.Char      -> i8_t
     | A.Void      -> void_t
     | A.Array(t)  -> L.pointer_type (ltype_of_typ t)
-    | A.Matrix -> L.pointer_type double_t
+    | A.Matrix -> L.pointer_type struct_matrix_type
   in
 
   let bind_typ = function
@@ -71,23 +76,76 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
   let printf_func : L.llvalue =
     L.declare_function "printf" printf_t the_module in
   *)
+ 
 
-
+  (* Declare standard library functions *)
+  (*
   let print_t : L.lltype =
     L.function_type void_t [| L.pointer_type i8_t |] in 
   let print_func : L.llvalue = 
     L.declare_function "print" print_t the_module in 
+  *)
 
   let print_hello_t : L.lltype =
     L.function_type void_t [| |] in
   let print_hello_func : L.llvalue =
     L.declare_function "printHello" print_hello_t the_module in 
+ 
   
   let printf_t : L.lltype =
     L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func : L.llvalue = 
     L.declare_function "printf" printf_t the_module in 
   
+
+  let initMatrix_t : L.lltype = 
+    L.var_arg_function_type (L.pointer_type struct_matrix_type) [| i32_t ; i32_t ; L.pointer_type (L.pointer_type double_t) |] in 
+  let initMatrix_func : L.llvalue = 
+    L.declare_function "initMatrix" initMatrix_t the_module in
+
+  
+  let parseCSV_t : L.lltype =
+    L.function_type (L.pointer_type struct_matrix_type) [| L.pointer_type i8_t |] in
+  let parseCSV_func : L.llvalue =
+    L.declare_function "parseCSV" parseCSV_t the_module in
+  
+  let outputCSV_t : L.lltype =
+    L.function_type void_t [| (L.pointer_type struct_matrix_type) ; L.pointer_type i8_t |] in 
+  let outputCSV_func : L.llvalue =
+    L.declare_function "outputCSV" outputCSV_t the_module in
+
+  let scalarMulti_t : L.lltype =
+    L.function_type (L.pointer_type struct_matrix_type) [| double_t ; (L.pointer_type struct_matrix_type) |] in
+  let scalarMulti_func : L.llvalue =
+    L.declare_function "scalarMulti" scalarMulti_t the_module in
+
+  let scalarDiv_t : L.lltype =
+    L.function_type (L.pointer_type struct_matrix_type) [| double_t ; (L.pointer_type struct_matrix_type) |] in
+  let scalarDiv_func : L.llvalue = 
+    L.declare_function "scalarDiv" scalarDiv_t the_module in
+
+  let subtractMatrix_t : L.lltype =
+    L.function_type (L.pointer_type struct_matrix_type) [| (L.pointer_type struct_matrix_type) ; (L.pointer_type struct_matrix_type)|] in 
+  let subtractMatrix_func : L.llvalue =
+    L.declare_function "subtractMatrix" subtractMatrix_t the_module in
+
+  let addMatrix_t : L.lltype = 
+    L.function_type (L.pointer_type struct_matrix_type) [| (L.pointer_type struct_matrix_type) ; (L.pointer_type struct_matrix_type) |] in
+  let addMatrix_func : L.llvalue =
+    L.declare_function "addMatrix" addMatrix_t the_module in
+
+  let dotProduct_t : L.lltype = 
+    L.function_type (L.pointer_type struct_matrix_type) [| (L.pointer_type struct_matrix_type) ; (L.pointer_type struct_matrix_type)|] in 
+  let dotProduct_func : L.llvalue = 
+    L.declare_function "dotProduct" dotProduct_t the_module in
+
+  (* cross product function *)
+
+  let retrieveElement_t : L.lltype = 
+    L.function_type i32_t [| i32_t ; i32_t ; (L.pointer_type struct_matrix_type) |] in 
+  let retrieveElement_func : L.llvalue = 
+    L.declare_function "retrieveElement" retrieveElement_t the_module in 
+
 
 
   (* Define each function (arguments and return type) so we can
@@ -110,9 +168,12 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
   (* Construct code for an expression; return its value *)
   let rec build_expr builder ((_, e) : sexpr) var_map = 
     (*Format type for C print functions. Add these to the print function calls*)
+    (*
     let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder
     and float_format_str = L.build_global_stringptr "%g\n" "fmt" builder
     and str_format_str = L.build_global_stringptr "%s\n" "fmt" builder in
+    *)
+    let str_format_str = L.build_global_stringptr "%s\n" "fmt" builder in 
     match e with
       SIntLit i  -> L.const_int i32_t i
     | SBoolLit b  -> L.const_int i1_t (if b then 1 else 0)
@@ -146,16 +207,26 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
                               | _ -> raise(Failure("Invalid array type"))
                             in ret
     | SMatrixLit(m) ->  let build_one e = build_expr builder e var_map in
+                        let cols_num = 0 in 
                         let rows = List.map (List.map build_one) m in
+                        let rows_num = List.length rows in 
                         let n = List.length m in
-                        let ptr = L.build_array_malloc double_t (L.const_int i64_t n) "" builder  in
+                        let elements_ptr = L.build_array_malloc double_t (L.const_int i64_t n) "" builder  in
                         ignore (List.map (fun ls -> List.fold_left (fun i elem ->
                                 let idx = L.const_int i32_t i in
-                                let eptr = L.build_gep ptr [|idx|] "" builder in
+                                let eptr = L.build_gep elements_ptr [|idx|] "" builder in
                                 let cptr = L.build_pointercast eptr 
                                     (L.pointer_type (L.type_of elem)) "" builder in
-                                let _ = (L.build_store elem cptr builder) in i + 1) 0 ls) rows); ptr
-
+                                let _ = (L.build_store elem cptr builder) in i + 1) 0 ls) rows);
+                        (* elements_ptr *)
+                        (*let matrix_ptr = L.build_alloca (L.pointer_type struct_matrix_type) "matrix" builder in*)
+                        (*
+                        let matrix_ptr = L.build_call initMatrix_func [| L.const_int i32_t rows_num ; L.const_int i32_t cols_num |] "initMatrix" builder in matrix_ptr
+                        (*
+                        L.build_call initTwoMatrix_func [| matrix_ptr ; elements_ptr |] "initTwoMatrix" builder
+                          *)                              
+                       *)
+                        L.build_call initMatrix_func [| L.const_int i32_t rows_num ; L.const_int i32_t cols_num ; elements_ptr |] "initMatrix" builder 
     | SAssign(s, e) -> let e' = build_expr builder e var_map in
       ignore(L.build_store e' (lookup s var_map) builder); e'
     | SBinop ((t1, e1), op, (t2, e2)) when t1 == A.Double -> (*WE NEED TO SET UP NON-INT OPERATIONS HERE*)
@@ -192,12 +263,35 @@ let translate (globals, functions) =  (* NOTE: our sprogram differs from microC!
        | A.LessEqual -> L.build_icmp L.Icmp.Sle
        | A.GreatEqual -> L.build_icmp L.Icmp.Sge
       ) e1' e2' "tmp" builder
-           (* Evaluate standard library function calls *) 
+    
+       (* Evaluate standard library function calls *) 
     | SCall ("printHello", []) ->
       L.build_call print_hello_func [| |] "" builder
     | SCall ("print", [e]) ->
       L.build_call printf_func [| str_format_str ; (build_expr builder e var_map) |]
         "printf" builder
+    | SCall ("parseCSV", [e]) -> 
+      L.build_call parseCSV_func [| (build_expr builder e var_map) |] "parseCSV" builder
+    | SCall ("outputCSV", [e1 ; e2]) -> 
+      L.build_call outputCSV_func [| (build_expr builder e1 var_map) ; (build_expr builder e2 var_map) |] "outputCSV" builder
+    | SCall ("scalarMulti", [e1 ; e2]) ->
+      L.build_call scalarMulti_func [| (build_expr builder e1 var_map) ; (build_expr builder e2 var_map) |] "scalarMulti" builder
+    | SCall ("scalarDiv", [e1 ; e2]) ->
+      L.build_call scalarDiv_func [| (build_expr builder e1 var_map) ; (build_expr builder e2 var_map) |] "scalarDiv" builder
+    | SCall ("subtractMatrix", [e1 ; e2]) ->
+      L.build_call subtractMatrix_func [| (build_expr builder e1 var_map) ; (build_expr builder e2 var_map) |] "subtractMatrix" builder
+    | SCall ("addMatrix", [e1 ; e2]) ->
+      L.build_call addMatrix_func [| (build_expr builder e1 var_map) ; (build_expr builder e2 var_map) |] "addMatrix" builder
+    | SCall ("dotProduct", [e1 ; e2]) -> 
+      L.build_call dotProduct_func [| (build_expr builder e1 var_map) ; (build_expr builder e2 var_map) |] "dotProduct" builder
+    (* Cross product *)
+    | SCall ("retrieveElement", [e1 ; e2 ; e3]) ->
+      L.build_call retrieveElement_func [| (build_expr builder e1 var_map) ; (build_expr builder e2 var_map) ; (build_expr builder e3 var_map) |] "retrieveElement" builder
+    
+    
+    
+    
+    
     | SCall (f, args) ->
       let (fdef, _) = StringMap.find f function_decls in
       let llargs = List.rev (List.map (fun e -> build_expr builder e var_map) (List.rev args)) in
