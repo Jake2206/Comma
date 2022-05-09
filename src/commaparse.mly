@@ -5,7 +5,7 @@ open Ast
 open Helpers
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE MULTIPLY DIVIDE PLUS MINUS ASSIGN LBRACK RBRACK BAR
+%token SEMI LPAREN RPAREN LBRACE RBRACE MULTIPLY DIVIDE MODULO PLUS MINUS ASSIGN LBRACK RBRACK BAR
 %token EQ NEQ LT GT LTE GTE AND OR 
 %token IF ELSE EIF
 %token WHILE FOR IN
@@ -142,6 +142,7 @@ expr_rule:
   | expr_rule GTE expr_rule 	    { Binop ($1, GreatEqual, $3) }
   | expr_rule AND expr_rule       { Binop ($1, And, $3)   }
   | expr_rule OR expr_rule        { Binop ($1, Or, $3)    }
+  | expr_rule MODULO expr_rule    { Binop ($1, Mod, $3)    }
   | ID ASSIGN expr_rule           { Assign ($1, $3)       }
   | LPAREN expr_rule RPAREN       { $2                    }
   | LPAREN LAMBDA typ_rule ID LBRACE expr_list_rule RBRACE expr_rule RPAREN { Lambda($3, $4, $6, $8) }

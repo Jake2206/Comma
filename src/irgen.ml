@@ -252,6 +252,7 @@ let translate (globals, functions) =
        | A.Great   -> L.build_fcmp L.Fcmp.Ogt
        | A.LessEqual -> L.build_fcmp L.Fcmp.Ole
        | A.GreatEqual -> L.build_fcmp L.Fcmp.Oge
+       | _ -> raise(Failure("Illegal operation on double type"))
       ) e1' e2' "tmp" builder
     | SBinop ((t1, e1), op, (t2, e2)) ->
       let e1' = build_expr builder (t1, e1) var_map
@@ -266,6 +267,7 @@ let translate (globals, functions) =
        | A.Less    -> L.build_icmp L.Icmp.Slt
        | A.Multiply -> L.build_mul
        | A.Divide  -> L.build_sdiv
+       | A.Mod     -> L.build_srem
        | A.Great   -> L.build_icmp L.Icmp.Sgt
        | A.LessEqual -> L.build_icmp L.Icmp.Sle
        | A.GreatEqual -> L.build_icmp L.Icmp.Sge

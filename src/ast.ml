@@ -1,4 +1,4 @@
-type bop =  Multiply | Divide | Add | Sub | Equal | Neq | Less | Great | LessEqual | GreatEqual | And | Or
+type bop =  Multiply | Divide | Add | Sub | Equal | Neq | Less | Great | LessEqual | GreatEqual | And | Or | Mod
 type uop = Neg | Not
 
 type typ = Int | Bool | Double | Char | Void | Array of typ | Matrix 
@@ -53,6 +53,7 @@ let string_of_op = function
   | GreatEqual -> ">="
   | And -> "&&"
   | Or -> "||"
+  | Mod -> "%"
 
 let string_of_typ = function
     Int -> "int"

@@ -208,7 +208,7 @@ let check (globals, functions) =
 					and (rt, e2derived) = expr e2 symbols in
 					let same = lt = rt in
 					let ty = match op with
-						Add | Sub | Multiply | Divide when same && lt = Int  -> Int
+						Add | Sub | Multiply | Divide | Mod when same && lt = Int  -> Int
 						| Add | Sub | Multiply | Divide when same && lt = Double -> Double
 						| Equal | Neq            when same 				-> Bool
 						| Less | Great | LessEqual | GreatEqual 
