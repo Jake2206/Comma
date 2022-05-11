@@ -34,7 +34,7 @@ open Helpers
 %left EQ NEQ 
 %left LT GT LTE GTE 
 %left PLUS MINUS
-%left MULTIPLY DIVIDE
+%left MULTIPLY DIVIDE MODULO
 
 
 %%
@@ -84,7 +84,7 @@ typ_rule:
   | BOOL    { Bool   }
   | DOUBLE  { Double }
   | CHAR    { Char   } 
-  | typ_rule ARRAY  { Array($1)  }
+  | typ_rule ARRAY { Array($1)  }
   | MATRIX  { Matrix }
   | VOID    { Void   }
 

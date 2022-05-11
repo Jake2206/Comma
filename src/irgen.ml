@@ -66,7 +66,9 @@ let translate (globals, functions) =
        SNoAssignBind(ty,na) -> (ty, na)
       | SAssignBind(ty,na,_) -> (ty, na)
     in 
-      let init = L.const_int (ltype_of_typ t) 0
+      let init = match t with
+                  A.Double -> L.const_float_of_string double_t "0.0"
+                  | _ -> L.const_int (ltype_of_typ t) 0
       in StringMap.add n (L.define_global n init the_module) m in
     List.fold_left global_var StringMap.empty globals in
 
