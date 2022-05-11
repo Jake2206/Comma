@@ -71,29 +71,6 @@ let translate (globals, functions) =
     List.fold_left global_var StringMap.empty globals in
 
   (* Declare standard library functions *)
-  (*
-  let printf_t : L.lltype =
-    L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
-  let printf_func : L.llvalue =
-    L.declare_function "printf" printf_t the_module in
-  *)
- 
-
-  (* Declare standard library functions *)
-  (*
-  let print_t : L.lltype =
-    L.function_type void_t [| L.pointer_type i8_t |] in 
-  let print_func : L.llvalue = 
-    L.declare_function "print" print_t the_module in 
-  *)
-
-  (*
-  let print_hello_t : L.lltype =
-    L.function_type void_t [| |] in
-  let print_hello_func : L.llvalue =
-    L.declare_function "printHello" print_hello_t the_module in 
-  *)  
-
   let printf_t : L.lltype =
     L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func : L.llvalue = 
@@ -171,13 +148,6 @@ let translate (globals, functions) =
 
   (* Construct code for an expression; return its value *)
   let rec build_expr builder ((_, e) : sexpr) var_map = 
-    (*Format type for C print functions. Add these to the print function calls*)
-   
-    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder
-    and float_format_str = L.build_global_stringptr "%g\n" "fmt" builder
-    and char_format_str = L.build_global_stringptr "%c\n" "fmt" builder
-    and str_format_str = L.build_global_stringptr "%s\n" "fmt" builder in
-
     match e with
       SIntLit i  -> L.const_int i32_t i
     | SBoolLit b  -> L.const_int i1_t (if b then 1 else 0)
@@ -220,20 +190,15 @@ let translate (globals, functions) =
                                         let eptr = L.build_gep row_ptr [|idx|] "" builder in
                                         let cptr = L.build_pointercast eptr 
                                                 (L.pointer_type (L.type_of elem)) "" builder in
-                                        let _ = (L.build_store elem cptr builder) 
-                                       in i + 1) 
-                                0 ls);
+                                        let _ = (L.build_store elem cptr builder) in i + 1)
+                                       0 ls);
                                 let indxl = L.const_int i32_t index in 
                                 let eptrr = L.build_gep ptr [| indxl |] "" builder in 
                                 let cptrr = L.build_pointercast eptrr (L.pointer_type (L.pointer_type (double_t))) "" builder in 
                                 let _ = (L.build_store row_ptr cptrr builder)
                                 in index + 1)
-                                       
-                                0 rows); 
-                        
-     
+                                0 rows);  
                        L.build_call initMatrix_func [| L.const_int i32_t r ; L.const_int i32_t c ; ptr |] "initMatrix" builder 
-
     | SAssign(s, e) -> let e' = build_expr builder e var_map in
       ignore(L.build_store e' (lookup s var_map) builder); e'
     | SBinop ((t1, e1), op, (t2, e2)) when t1 == A.Double ->
@@ -279,25 +244,14 @@ let translate (globals, functions) =
         let e' = build_expr builder e var_map in 
         let (typ, _) = e in
         match typ with
-          A.Array(typ) -> if typ = A.Char then L.build_call printf_func [| str_format_str ; e' |] "printf" builder
+          A.Array(typ) -> if typ = A.Char then L.build_call printf_func [| (L.build_global_stringptr "%s\n" "fmt" builder); e' |] "printf" builder
                               else raise(Failure("Unprintable argument given to print function"))
-          | A.Int -> L.build_call printf_func [| int_format_str ; e' |] "printf" builder
-          | A.Bool -> L.build_call printf_func [| int_format_str ; e' |] "printf" builder
-          | A.Char -> L.build_call printf_func [| char_format_str ; e' |] "printf" builder
-          | A.Double -> L.build_call printf_func [| float_format_str ; e' |] "printf" builder
+          | A.Int -> L.build_call printf_func [| (L.build_global_stringptr "%d\n" "fmt" builder); e' |] "printf" builder
+          | A.Bool -> L.build_call printf_func [| (L.build_global_stringptr "%d\n" "fmt" builder); e' |] "printf" builder
+          | A.Char -> L.build_call printf_func [| (L.build_global_stringptr "%c\n" "fmt" builder); e' |] "printf" builder
+          | A.Double -> L.build_call printf_func [| (L.build_global_stringptr "%g\n" "fmt" builder); e' |] "printf" builder
           | _ -> raise(Failure("Unprintable argument given to print function")) in
       print_it e
-    
-       (* Evaluate standard library function calls *) 
-    (*
-    | SCall ("printHello", []) ->
-      L.build_call print_hello_func [| |] "" builder
-    *)
-    (*
-    | SCall ("print", [e]) ->
-      L.build_call printf_func [| str_format_str ; (build_expr builder e var_map) |]
-        "printf" builder
-    *)
     | SCall ("printMatrix", [e]) ->
       L.build_call printMatrix_func [| (build_expr builder e var_map) |] "" builder 
     
