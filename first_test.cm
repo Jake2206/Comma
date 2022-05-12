@@ -1,6 +1,0 @@
-def int main(){
-	char array b = ['t','e','s','t'] char;
-	char a = 't';
-	print(b);
-	return 0;
-}

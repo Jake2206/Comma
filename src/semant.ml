@@ -19,11 +19,21 @@ let check (globals, functions) =
 			StringMap.add "print" {
 				rtyp = Void;
 				fname = "print";
-				formals = [NoAssignBind(Array Char, "i")]; 
-				locals = []; 
+				formals = [NoAssignBind(Array Char, "i")];
+				locals = [];
 				body = [];
 			} map
-		in 
+		in
+                let map = 
+                        StringMap.add "printMatrix" {
+                                rtyp = Void;
+                                fname = "printMatrix";
+                                formals = [NoAssignBind(Matrix, "Matrix")];
+                                locals = [];
+                                body = []; 
+
+                        } map
+                in
 		let map = 
 			StringMap.add "parseCSV" {
 				rtyp = Matrix;
@@ -37,7 +47,7 @@ let check (globals, functions) =
 			StringMap.add "outputCSV" {
 				rtyp = Void;
 				fname = "outputCSV";
-				formals = [NoAssignBind(Matrix, "matrix"); NoAssignBind(Array Char, "outputFilepath")];  (* NEEDS TO BE CHANGED TO ARRAY, CHAR ARRAY, OR LIST *)
+				formals = [NoAssignBind(Matrix, "matrix"); NoAssignBind(Array Char, "outputFilepath")];
 				locals = []; 
 				body = [];
 			} map
@@ -116,7 +126,7 @@ let check (globals, functions) =
 		in 
 		let map = 
 			StringMap.add "retrieveElement" {
-				rtyp = Void;          (* NEED TO FIGURE OUT HOW TO DIFFERENT MATRIX TYPES *)
+				rtyp = Double;
 				fname = "retrieveElement";
 				formals = [NoAssignBind(Int, "row_index"); NoAssignBind(Int, "column_index"); NoAssignBind(Matrix, "matrix")];
 				locals = []; 
@@ -143,7 +153,7 @@ let check (globals, functions) =
 	(* Find function in table *)
 	let find_func s =
 		try StringMap.find s !func_decls
-		with Not_found -> raise (Failure ("no such function declared: " ^ s)) (* ignore(StringMap.iter (fun x y -> Printf.printf "%s -> %s\n" x (string_of_typ y.rtyp)) !func_decls); *)
+		with Not_found -> raise (Failure ("no such function declared: " ^ s))
 	in
 	
 	(* Helper function to get expression type and derived type *)
@@ -167,7 +177,7 @@ let check (globals, functions) =
 
         (* Evaluate an expression *)		
 		let rec expr e symbols = match e with
-			NulLit -> (Void, SNulLit)      (* What is the internal representation of null, 0? Void for now*)
+			NulLit -> (Void, SNulLit)
 			| IntLit l -> (Int, SIntLit l)
 			| BoolLit l -> (Bool, SBoolLit l)
 			| CharLit l -> (Char, SCharLit l)
@@ -183,18 +193,22 @@ let check (globals, functions) =
 									"expected double but found " ^ string_of_typ rt ^ " in " ^ 
 									string_of_expr ex in
 								let get_derived e = let (ty, e') = expr e symbols in ignore(check_assign Double ty (err ty e)); (ty, e') in
+                                                                let row_num = List.length m in
 								let get_single arr = let cur_len = List.length arr in
-													if cur_len = len then List.map get_derived arr else 
-													raise (Failure ("Illegal row length in matrix. Expected length " ^ string_of_int len ^ " got length " ^ string_of_int cur_len)) in
+													if cur_len = len then
+                                                                                                            
+                                                                                                            List.map get_derived arr 
+                                                                                                        else 
+													    raise (Failure ("Illegal row length in matrix. Expected length " ^ string_of_int len ^ " got length " ^ string_of_int cur_len)) in
 								let entries = List.map get_single m in
-								(Matrix, SMatrixLit(entries))
+								(Matrix, SMatrixLit(row_num, len, entries))
 			| Id l      -> (type_of_identifier l symbols, SId l)
 			| Binop(e1, op, e2) -> 
 					let (lt, e1derived) = expr e1 symbols 
 					and (rt, e2derived) = expr e2 symbols in
 					let same = lt = rt in
 					let ty = match op with
-						Add | Sub | Multiply | Divide when same && lt = Int  -> Int
+						Add | Sub | Multiply | Divide | Mod when same && lt = Int  -> Int
 						| Add | Sub | Multiply | Divide when same && lt = Double -> Double
 						| Equal | Neq            when same 				-> Bool
 						| Less | Great | LessEqual | GreatEqual 
@@ -224,7 +238,9 @@ let check (globals, functions) =
 					   let (et, e') = expr e symbols in
 					   let err = "Illegal argument found " ^ string_of_typ et ^
 								 " expected " ^ string_of_typ bind_typ ^ " in " ^ string_of_expr e ^ " in function " ^ fname
-					   in (check_assign bind_typ et err, e')
+					   in match fname with
+					    "print" -> (et, e')
+					    | _ -> (check_assign bind_typ et err, e') 
 				  in
 				  let args' = List.map2 check_call fd.formals args
 				  in (fd.rtyp, SCall(fname, args'))
@@ -239,7 +255,7 @@ let check (globals, functions) =
 	
 	let check_binds (kind  : string) (binds : bind list) =
 		(* Check variables bind to a real type (not null)
-			And check that formals do not have expression with declaration*)
+			And check that formals do not have expressions with declaration*)
 		List.iter (function
 			AssignBind(Void, _, _)  -> raise (Failure ("illegal bind: cannot be of type nul"))
 			| NoAssignBind(Void, _) -> raise (Failure ("illegal bind: cannot be of type nul"))
@@ -253,7 +269,7 @@ let check (globals, functions) =
 				if dt == t then
 					()
 				else
-					if dt == Void then   (* Need to fix if we change type of Nul *)
+					if dt == Void then
 						()
 					else
 						if string_of_typ t == string_of_typ dt then 
@@ -302,6 +318,7 @@ let check (globals, functions) =
 		check_binds "formal" func.formals;
 		check_binds "local" func.locals;
 		
+		(*Helper function to convert binds to Sbinds*)
 		let store_binds binds = let get_one = function 
 			| AssignBind(t,n,e) -> SAssignBind(t,n,(derive_expr_in_context e binds))
 			| NoAssignBind(t,n) -> SNoAssignBind(t,n)
@@ -309,9 +326,9 @@ let check (globals, functions) =
 			List.map get_one binds
 		in
 
+		(*Convert binds to Sbind types*)
 		let sformals = store_binds func.formals
 		in
-
 		let slocals =  store_binds func.locals
 		in 
 
@@ -359,6 +376,7 @@ let check (globals, functions) =
 	} 
 in 
 
+(*Convert global binds to Sbinds*)
 let store_binds binds = let get_one = function 
 			| AssignBind(t,n,e) -> SAssignBind(t,n,(derive_expr_in_context e binds))
 			| NoAssignBind(t,n) -> SNoAssignBind(t,n)

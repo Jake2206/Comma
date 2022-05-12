@@ -24,6 +24,7 @@ rule tokenize = parse
 | '-'      { MINUS }
 | '*'      { MULTIPLY }
 | '/'      { DIVIDE }
+| '%'      { MODULO }
 | '='      { ASSIGN }
 | '|'      { BAR }
 | "=="     { EQ }
@@ -36,7 +37,6 @@ rule tokenize = parse
 | "||"     { OR }
 | "if"     { IF }
 | "else"   { ELSE }
-| "eif"    { EIF  }
 | "for"    { FOR  }
 | "while"  { WHILE }
 | "return" { RETURN }

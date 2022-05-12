@@ -1,0 +1,12 @@
+def int gcd(int a, int b){
+  if(b == 0){
+    return a;
+  }else{
+    return gcd(b, a%b);
+  }
+}
+
+def int main(){
+  int a = gcd(95, 100);
+  print(a);
+}

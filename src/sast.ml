@@ -10,7 +10,7 @@ and sx =
   | SCharLit of char
   | SDoubLit of string
   | SArrayLit of typ * sexpr list
-  | SMatrixLit of (sexpr list) list
+  | SMatrixLit of int * int * ((sexpr list) list)
   | SId of string
   | SBinop of sexpr * bop * sexpr
   | SAssign of string * sexpr
@@ -55,7 +55,7 @@ let rec string_of_sexpr (t, e) =
 	  | SDoubLit(d) -> d
 	  | SBoolLit(true) -> "true"
 	  | SBoolLit(false) -> "false"
-    | SMatrixLit(m) -> "|[" ^ string_of_slist (List.map (fun a -> string_of_slist (List.map string_of_sexpr a)) m) ^ "]| "
+    | SMatrixLit(_, _, m) -> "|[" ^ string_of_slist (List.map (fun a -> string_of_slist (List.map string_of_sexpr a)) m) ^ "]| "
 	  | SArrayLit(t, a) ->  "[" ^ (String.concat ", " (List.map string_of_sexpr a)) ^ "] " ^ string_of_typ t
 	  | SId(s) -> s
 	  | SBinop(e1, o, e2) ->

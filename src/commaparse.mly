@@ -5,7 +5,7 @@ open Ast
 open Helpers
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE MULTIPLY DIVIDE PLUS MINUS ASSIGN LBRACK RBRACK BAR
+%token SEMI LPAREN RPAREN LBRACE RBRACE MULTIPLY DIVIDE MODULO PLUS MINUS ASSIGN LBRACK RBRACK BAR
 %token EQ NEQ LT GT LTE GTE AND OR 
 %token IF ELSE EIF
 %token WHILE FOR IN
@@ -34,7 +34,7 @@ open Helpers
 %left EQ NEQ 
 %left LT GT LTE GTE 
 %left PLUS MINUS
-%left MULTIPLY DIVIDE
+%left MULTIPLY DIVIDE MODULO
 
 
 %%
@@ -84,7 +84,7 @@ typ_rule:
   | BOOL    { Bool   }
   | DOUBLE  { Double }
   | CHAR    { Char   } 
-  | typ_rule ARRAY  { Array($1)  }
+  | typ_rule ARRAY { Array($1)  }
   | MATRIX  { Matrix }
   | VOID    { Void   }
 
@@ -97,15 +97,9 @@ stmt_rule:
   | LBRACE stmt_list_rule RBRACE                          { Block $2        }
   | IF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }
   | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
-  | IF LPAREN expr_rule RPAREN stmt_rule eif_rule         { If ($3, $5, $6) }  
   | RETURN expr_rule SEMI                                 { Return $2       }
   | WHILE LPAREN expr_rule RPAREN stmt_rule				        { While ($3, $5)  }
   | FOR LPAREN expr_rule COMMA expr_rule RPAREN stmt_rule { For ($3, $5, $7) }
-
-eif_rule:
-    EIF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }
-  | EIF LPAREN expr_rule RPAREN stmt_rule eif_rule         { If ($3, $5, $6) }
-  | EIF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
 
 array_decl_rule:
   /*nothing*/        { [] }
@@ -148,6 +142,7 @@ expr_rule:
   | expr_rule GTE expr_rule 	    { Binop ($1, GreatEqual, $3) }
   | expr_rule AND expr_rule       { Binop ($1, And, $3)   }
   | expr_rule OR expr_rule        { Binop ($1, Or, $3)    }
+  | expr_rule MODULO expr_rule    { Binop ($1, Mod, $3)    }
   | ID ASSIGN expr_rule           { Assign ($1, $3)       }
   | LPAREN expr_rule RPAREN       { $2                    }
   | LPAREN LAMBDA typ_rule ID LBRACE expr_list_rule RBRACE expr_rule RPAREN { Lambda($3, $4, $6, $8) }

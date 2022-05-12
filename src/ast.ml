@@ -1,4 +1,4 @@
-type bop =  Multiply | Divide | Add | Sub | Equal | Neq | Less | Great | LessEqual | GreatEqual | And | Or
+type bop =  Multiply | Divide | Add | Sub | Equal | Neq | Less | Great | LessEqual | GreatEqual | And | Or | Mod
 type uop = Neg | Not
 
 type typ = Int | Bool | Double | Char | Void | Array of typ | Matrix 
@@ -53,6 +53,7 @@ let string_of_op = function
   | GreatEqual -> ">="
   | And -> "&&"
   | Or -> "||"
+  | Mod -> "%"
 
 let string_of_typ = function
     Int -> "int"
@@ -79,7 +80,6 @@ let rec string_of_expr = function
   | Call(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | Lambda(typ, id, e, arg) -> "@ " ^ string_of_typ typ ^ id ^ "{ " ^ String.concat "\n" (List.map string_of_expr e) ^ " }" ^ string_of_expr arg
 
-(* let string_of_vdecl (t, id, lit) = string_of_typ t ^ " " ^ id ^ " = " ^ string_of_expr lit ^ ";\n" *)
 let string_of_vdecl bind = 
   match bind with 
   AssignBind(t, i, e) -> string_of_typ t ^ " " ^ i ^ " = " ^ string_of_expr e ^ ";\n"
