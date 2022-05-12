@@ -171,7 +171,6 @@ let check (globals, functions) =
 		
 		let type_of_identifier s symbols =
 			try StringMap.find s symbols
-			with Not_found -> try (StringMap.find s !func_decls).rtyp
 			with Not_found ->raise (Failure ("undeclared symbol: " ^ s))
 		in 			
 
@@ -316,7 +315,7 @@ let check (globals, functions) =
 	
 	let check_function func =
 		check_binds "formal" func.formals;
-		check_binds "local" func.locals;
+		check_binds "local" (globals@func.formals@func.locals);
 		
 		(*Helper function to convert binds to Sbinds*)
 		let store_binds binds = let get_one = function 
@@ -327,9 +326,9 @@ let check (globals, functions) =
 		in
 
 		(*Convert binds to Sbind types*)
-		let sformals = store_binds func.formals
+		let sformals = store_binds (func.formals)
 		in
-		let slocals =  store_binds func.locals
+		let slocals =  store_binds (globals@func.formals@func.locals)
 		in 
 
 	    let context = ( globals @ func.formals @ func.locals )	

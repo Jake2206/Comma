@@ -9,16 +9,20 @@ def int main(){
   print(b);
   t3();
   print(b);
+  return 0;
 }
 
 def int t1(){
   b = b+1;
+  return 0;
 }
 
 def int t2(){
   b = b+1;
+  return 0;
 }
 
 def int t3(){
   b = b+1;
+  return 0;
 }
