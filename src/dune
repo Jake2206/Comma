@@ -1,5 +1,6 @@
 (library
- (name src))
+ (name src)
+ (libraries llvm.analysis))
 
 (ocamlyacc commaparse)
 (ocamllex scanner)

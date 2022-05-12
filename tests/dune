@@ -1,5 +1,4 @@
 (library
  (name test_suite)
- (inline_tests)
  (libraries src ounit2)
  (preprocess (pps ppx_expect)))

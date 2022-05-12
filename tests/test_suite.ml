@@ -14,7 +14,24 @@ let%expect_test "int decl w/ assign" = run_test "def int main() { int b = 3; }";
     int b = 3;
     }
     |}]
+let%expect_test "global int decl w/ assign" = run_test "int a = 5; def int main() { int b = 3; }"; 
+  [%expect {|
+    int a = 5;
 
+    def int main()
+    {
+    int b = 3;
+    }
+    |}];;
+let%expect_test "global bool decl w/ assign" = run_test "bool a = false; def int main() { int b = 3; }"; 
+  [%expect {|
+    bool a = false;
+    
+    def int main()
+    {
+    int b = 3;
+    }
+    |}];;
 let%expect_test "multiply expr in main" = run_test "def int main() { 2*5; }"; 
   [%expect {|
     def int main()
@@ -195,36 +212,21 @@ let%expect_test "if no eif or else" = run_test "def int main() { if (true) { } }
     }
     } |}];;
 
-let%expect_test "func declr w/ func as param" = run_test "def int main() { return test_f(1,1, test_f2); } def int test_f ( int a, int b, f ) { return f(a,b); } def int test_f2 ( int a, int b ) { return a*b; }"; 
-  [%expect {|
-    def int main()
-    {
-    return (int : test_f((int : 1), (int : 1), (int : test_f2)));
-    }
-    def int test_f(int a, int b, f)
-    {
-    return (int : f((int : a), (int : b)));
-    }
-    def int test_f2(int a, int b)
-    {
-    return (int : (int : a) * (int : b));
-    } |}];;
-
-let%expect_test "int array declaration" = run_test "def int main() { array b = [3, 4] int; }"; 
+let%expect_test "int array declaration" = run_test "def int main() { int array b = [3, 4] int; }"; 
   [%expect {|
     def int main()
     {
     array b = [3, 4] int;
     } |}];;
 
-let%expect_test "1d matrix declaration" = run_test "def int main() { matrix m = |[[3, 4]]| int; }"; 
+let%expect_test "1d matrix declaration" = run_test "def int main() { int matrix m = |[[3, 4]]| int; }"; 
   [%expect {|
     def int main()
     {
     matrix m = |[[3, 4]]| int;
     } |}];;
 
-let%expect_test "2d matrix decl" = run_test "def int main() { matrix x = |[[1.2,2.3],[1.2,1.3]]| double; }"; 
+let%expect_test "2d matrix decl" = run_test "def int main() { matrix x = |[1.2,2.3],[1.2,1.3]|; }"; 
   [%expect {|
     def int main()
     {
@@ -232,7 +234,7 @@ let%expect_test "2d matrix decl" = run_test "def int main() { matrix x = |[[1.2,
     }
   |}];;
 
-let%expect_test "lambda func decl in main" = run_test "def int main() { int a = 1; int b=1; b = @int c { c = c*2+a*5 }; b = b+a; }";
+let%expect_test "lambda func decl in main" = run_test "def int main() { int a = 1; int b=1; b = (@int c { c = c*2+a*5 } b); }";
   [%expect {|
   def int main()
   {
@@ -275,14 +277,14 @@ let%expect_test "if expr w/ illegal semi" =
     |}]
 
 let%expect_test "Bad array entry" = 
-  try run_test "def int main() { array b = [3, 'a'] int; }" with 
+  try run_test "def int main() { int array b = [3, 'a'] int; }" with 
     Failure e -> print_endline e;
   [%expect {|
     Illegal array entry: int = char in 'a'
     |}]
 
 let%expect_test "Assign array to int variable" = 
-  try run_test "def int main() { array b = [3, 4] int; int c = b;}" with 
+  try run_test "def int main() { int array b = [3, 4] int; int c = b;}" with 
     Failure e -> print_endline e;
   [%expect {|
     Illegal bind: mismatched types: expected 'int' got 'array' instead in expr: b

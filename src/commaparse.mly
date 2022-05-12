@@ -5,7 +5,7 @@ open Ast
 open Helpers
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE MULTIPLY DIVIDE PLUS MINUS ASSIGN LBRACK RBRACK BAR
+%token SEMI LPAREN RPAREN LBRACE RBRACE MULTIPLY DIVIDE MODULO PLUS MINUS ASSIGN LBRACK RBRACK BAR
 %token EQ NEQ LT GT LTE GTE AND OR 
 %token IF ELSE EIF
 %token WHILE FOR IN
@@ -14,7 +14,7 @@ open Helpers
 %token DOUBLE INT BOOL CHAR ARRAY MATRIX NUL
 %token VOID
 %token COMMA LAMBDA
-%token <float> FLIT
+%token <string> FLIT
 %token <int> INTLIT
 %token <char> CHLIT
 %token <bool> BLIT
@@ -34,7 +34,7 @@ open Helpers
 %left EQ NEQ 
 %left LT GT LTE GTE 
 %left PLUS MINUS
-%left MULTIPLY DIVIDE
+%left MULTIPLY DIVIDE MODULO
 
 
 %%
@@ -62,8 +62,6 @@ formals_opt:
 
 formals_rule:
   | typ_rule ID { NoAssignBind($1, $2) }
-  | ID LPAREN args_opt RPAREN { FuncCall($1, $3) }
-  | ID { FuncArg($1) }
 
 formals_list:
   formals_rule { [$1] }
@@ -86,7 +84,7 @@ typ_rule:
   | BOOL    { Bool   }
   | DOUBLE  { Double }
   | CHAR    { Char   } 
-  | ARRAY   { Array  }
+  | typ_rule ARRAY { Array($1)  }
   | MATRIX  { Matrix }
   | VOID    { Void   }
 
@@ -99,15 +97,9 @@ stmt_rule:
   | LBRACE stmt_list_rule RBRACE                          { Block $2        }
   | IF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }
   | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
-  | IF LPAREN expr_rule RPAREN stmt_rule eif_rule         { If ($3, $5, $6) }  
   | RETURN expr_rule SEMI                                 { Return $2       }
   | WHILE LPAREN expr_rule RPAREN stmt_rule				        { While ($3, $5)  }
-  | FOR LPAREN expr_rule COMMA expr_rule COMMA expr_rule RPAREN stmt_rule { For ($3, $5, $7, $9) }
-
-eif_rule:
-    EIF LPAREN expr_rule RPAREN stmt_rule %prec NOELSEEIF  { If ($3, $5, Block([])) }
-  | EIF LPAREN expr_rule RPAREN stmt_rule eif_rule         { If ($3, $5, $6) }
-  | EIF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
+  | FOR LPAREN expr_rule COMMA expr_rule RPAREN stmt_rule { For ($3, $5, $7) }
 
 array_decl_rule:
   /*nothing*/        { [] }
@@ -135,9 +127,9 @@ expr_rule:
   | FLIT                          { DoubLit $1            }
   | CHLIT                         { CharLit $1            }
   | ID                            { Id $1                 }
-  | NUL	                          { NulLit 		          } /* source of the shift/reduce conflict */
+  | NUL	                          { NulLit 		            }
   | LBRACK array_decl_rule RBRACK typ_rule { ArrayLit ($4, $2)           }
-  | BAR LBRACK matrix_decl_rule RBRACK BAR typ_rule      { MatrixLit ($6,$3)          }
+  | BAR matrix_decl_rule BAR      { MatrixLit ($2)          }
   | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
   | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
   | expr_rule MULTIPLY expr_rule  { Binop ($1, Multiply, $3)   }
@@ -150,9 +142,10 @@ expr_rule:
   | expr_rule GTE expr_rule 	    { Binop ($1, GreatEqual, $3) }
   | expr_rule AND expr_rule       { Binop ($1, And, $3)   }
   | expr_rule OR expr_rule        { Binop ($1, Or, $3)    }
+  | expr_rule MODULO expr_rule    { Binop ($1, Mod, $3)    }
   | ID ASSIGN expr_rule           { Assign ($1, $3)       }
   | LPAREN expr_rule RPAREN       { $2                    }
-  | LAMBDA typ_rule ID LBRACE expr_list_rule RBRACE { Lambda($2, $3, $5) }
+  | LPAREN LAMBDA typ_rule ID LBRACE expr_list_rule RBRACE expr_rule RPAREN { Lambda($3, $4, $6, $8) }
   | ID LPAREN args_opt RPAREN     { Call ($1, $3)         }
 
 args_opt:

@@ -1,0 +1,4 @@
+def int main() {  
+    char array t = ['t', 'e', 's', 't'] char;
+    print(t); 
+}

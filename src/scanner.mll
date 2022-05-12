@@ -24,6 +24,7 @@ rule tokenize = parse
 | '-'      { MINUS }
 | '*'      { MULTIPLY }
 | '/'      { DIVIDE }
+| '%'      { MODULO }
 | '='      { ASSIGN }
 | '|'      { BAR }
 | "=="     { EQ }
@@ -36,7 +37,6 @@ rule tokenize = parse
 | "||"     { OR }
 | "if"     { IF }
 | "else"   { ELSE }
-| "eif"    { EIF  }
 | "for"    { FOR  }
 | "while"  { WHILE }
 | "return" { RETURN }
@@ -55,7 +55,7 @@ rule tokenize = parse
 | "row"    { ROW  } 
 | "col"    { COL  }
 | digit+ as lem  { INTLIT(int_of_string lem) }
-| digit+ '.' digit+ as lem { FLIT(float_of_string lem) }
+| digit+ '.' digit+ as lem { FLIT(lem) }
 | letter (digit | letter | '_')* as lem { ID(lem) }
 | char as lem { CHLIT(lem.[1]) }
 | eof { EOF }

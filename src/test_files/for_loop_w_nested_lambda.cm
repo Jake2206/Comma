@@ -1,0 +1,6 @@
+def int main() {  
+    int b = 0;
+    for(b < 20, b = ( @int c {c=c+1} (@int d {d = d+1} b) ) ){
+        print(b);
+    }
+}
