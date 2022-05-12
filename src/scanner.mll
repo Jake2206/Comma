@@ -5,7 +5,8 @@
 
 let digit = ['0'-'9']
 let letter = ['a'-'z' 'A'-'Z']
-let char = ''' ( letter | digit ) '''
+let space = [' ']
+let char = ''' ( letter | digit | space) '''
 let escape = '\\' [''' '"']
 
 rule tokenize = parse

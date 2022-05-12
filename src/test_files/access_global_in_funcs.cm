@@ -1,0 +1,24 @@
+int b;
+
+def int main(){
+  b = 1;
+  print(b);
+  t1();
+  print(b);
+  t2();
+  print(b);
+  t3();
+  print(b);
+}
+
+def int t1(){
+  b = b+1;
+}
+
+def int t2(){
+  b = b+1;
+}
+
+def int t3(){
+  b = b+1;
+}

@@ -1,0 +1,10 @@
+char array c = ['g','l','b','l',' ','v','a','r','s'] char;
+matrix b = |[1.1],[2.2]|;
+
+int a = 1;
+
+def int main(){
+  print(c);
+  printMatrix(b);
+  print(a);
+}

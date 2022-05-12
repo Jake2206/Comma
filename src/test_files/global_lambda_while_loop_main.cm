@@ -1,0 +1,9 @@
+int b = 4;
+int a = b = (@int c {c = b*b+b-1} b);
+def int main(){
+  print(a);
+  while(a>0){
+    a = a - b;
+  }
+  print(a);
+}

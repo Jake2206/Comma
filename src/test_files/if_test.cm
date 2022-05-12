@@ -1,0 +1,14 @@
+def int main(){
+  test_if(1);
+  test_if(0);
+}
+
+def int test_if(int a){
+  if(a==1){
+    print(1);
+  }
+  else{
+    print(0);
+  }
+  return 0;
+}

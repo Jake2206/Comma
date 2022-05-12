@@ -7,7 +7,7 @@ Elysia Witham, ew2632
 Andrey Uspenskiy, avu2106
 Jacob Alexander, jla2206
 
-We based our project files off of NanoC and MicroC. We also borrowed from Edward's projects. Refer to the LRM in `doc/plt_lrm.py` for more detailed information about the language and its implementation.
+We based our project files off of NanoC and MicroC. We also borrowed from professor Edward's projects. Refer to the LRM in `doc/plt_lrm.py` for more detailed information about the language and its implementation.
 
 --IR GENERATION WITH LLVM--
 

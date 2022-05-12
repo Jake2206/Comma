@@ -1,0 +1,12 @@
+def int main(){
+  int a = 1;
+  char b = '1';
+  double c = 1.1;
+  bool d = true;
+  char array e = ['1'] char;
+  print(a);
+  print(b); 
+  print(c); 
+  print(d); 
+  print(e);  
+}

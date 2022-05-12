@@ -68,6 +68,8 @@ let translate (globals, functions) =
     in 
       let init = match t with
                   A.Double -> L.const_float_of_string double_t "0.0"
+                  | A.Array(_) -> L.const_pointer_null (ltype_of_typ t)
+                  | A.Matrix -> L.const_pointer_null (ltype_of_typ t)
                   | _ -> L.const_int (ltype_of_typ t) 0
       in StringMap.add n (L.define_global n init the_module) m in
     List.fold_left global_var StringMap.empty globals in
